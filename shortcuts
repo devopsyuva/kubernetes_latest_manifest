@@ -1,0 +1,105 @@
+How to ping all pods at once?
+=============================
+kubectl get po -o json | jq .items[].status.podIP -r | fping
+
+Sample output:
+root@kubernetesmanager:~# kubectl get po --all-namespaces -o json | jq .items[].status.podIP -r | fping
+10.244.52.9 is alive
+192.168.0.50 is alive
+192.168.0.51 is alive
+10.244.52.8 is alive
+10.244.52.7 is alive
+192.168.0.50 is alive
+192.168.0.50 is alive
+192.168.0.50 is alive
+192.168.0.50 is alive
+192.168.0.51 is alive
+192.168.0.50 is alive
+10.244.119.11 is alive
+10.244.119.10 is alive
+root@kubernetesmanager:~#
+
+
+For rollingupdates:
+===================
+kubectl patch statefulset web -p '{"spec":{"updateStrategy":{"type":"RollingUpdate"}}}'
+kubectl patch statefulset web -p '{"spec":{"updateStrategy":{"type":"RollingUpdate","rollingUpdate":{"partition":3}}}}'
+
+
+List all images running on the cluster:
+=======================================
+kubectl get pods --all-namespaces -o jsonpath="{..image}" | tr -s '[[:space:]]' '\n' | sort | uniq -c
+kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" | tr -s '[[:space:]]' '\n' | uniq -c
+
+List images from specific node for the pods with status Running, Completed and Succeeded
+
+kubectl get pods --all-namespaces --field-selector=status.phase=Running --field-selector=status.phase=Completed --field-selector=status.phase=Succeeded --field-selector=spec.nodeName=<node> -o jsonpath="{.items[*].spec.containers[*].image}" | tr -s '[[:space:]]' '\n' | sort | uniq -c | sort | uniq -c | awk -F' ' '{sum+=$1;}END{print sum;}'
+
+
+Sample output:
+kubernetesui/dashboard:v2.0.0-rc7root@kubernetesmanager:~# kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" | tr -s '[[:space:]]' '\n' | uniq -c
+      1 calico/kube-controllers:v3.11.2
+      2 calico/node:v3.11.2
+      2 k8s.gcr.io/coredns:1.6.7
+      1 k8s.gcr.io/etcd:3.4.3-0
+      1 k8s.gcr.io/kube-apiserver:v1.18.2
+      1 k8s.gcr.io/kube-controller-manager:v1.18.2
+      2 k8s.gcr.io/kube-proxy:v1.18.2
+      1 k8s.gcr.io/kube-scheduler:v1.18.2
+      1 kubernetesui/metrics-scraper:v1.0.4
+      1 kubernetesui/dashboard:v2.0.0-rc7
+root@kubernetesmanager:~# 
+
+
+Patching:
+=========
+$ kubectl patch node k8s-node-1 -p '{"spec":{"unschedulable":true}}' # Partially update a node
+
+# Update a container's image; spec.containers[*].name is required because it's a merge key
+$ kubectl patch pod valid-pod -p '{"spec":{"containers":[{"name":"kubernetes-serve-hostname","image":"new image"}]}}'
+
+# Update a container's image using a json patch with positional arrays
+$ kubectl patch pod valid-pod --type='json' -p='[{"op": "replace", "path": "/spec/containers/0/image", "value":"new image"}]'
+
+
+Editing kubernetes objects:
+===========================
+$ kubectl edit svc/docker-registry                      # Edit the service named docker-registry
+$ KUBE_EDITOR="nano" kubectl edit svc/docker-registry   # Use an alternative editor
+
+
+Deleting resources:
+===================
+$ kubectl delete -f ./pod.json                      # Delete a pod using the type and name specified in pod.json
+$ kubectl delete pod,service baz foo                # Delete pods and services with same names "baz" and "foo"
+$ kubectl delete pods,services -l name=myLabel      # Delete pods and services with label name=myLabel
+$ kubectl -n my-ns delete po,svc --all              # Delete all pods and services in namespace my-ns
+
+
+Nodes and cluster:
+==================
+$ kubectl cordon my-node                                                # Mark my-node as unschedulable
+$ kubectl drain my-node                                                 # Drain my-node in preparation for maintenance
+$ kubectl uncordon my-node                                              # Mark my-node as schedulable
+$ kubectl top node my-node                                              # Show metrics for a given node
+$ kubectl cluster-info                                                  # Display addresses of the master and services
+$ kubectl cluster-info dump                                             # Dump current cluster state to stdout
+$ kubectl cluster-info dump --output-directory=/path/to/cluster-state   # Dump current cluster state to /path/to/cluster-state
+
+# If a taint with that key and effect already exists, its value is replaced as specified.
+$ kubectl taint nodes foo dedicated=special-user:NoSchedule
+
+
+Output format                       Description
+-o=custom-columns=<spec>            Print a table using a comma separated list of custom columns
+-o=custom-columns-file=<filename>   Print a table using the custom columns template in the <filename> file
+-o=json                             Output a JSON formatted API object
+-o=jsonpath=<template>              Print the fields defined in a jsonpath expression
+-o=jsonpath-file=<filename>         Print the fields defined by the jsonpath expression in the <filename> file
+-o=name                             Print only the resource name and nothing else
+-o=wide                             Output in the plain-text format with any additional information, and for pods, the node name is included
+-o=yaml                             Output a YAML formatted API object
+
+
+Reference: https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/
+https://unofficial-kubernetes.readthedocs.io/en/latest/user-guide/kubectl-cheatsheet/

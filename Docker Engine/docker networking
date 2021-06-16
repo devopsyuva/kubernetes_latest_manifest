@@ -1,0 +1,94 @@
+Docker Network Drivers:
+=======================
+
+Docker’s networking subsystem is pluggable, using drivers. Several drivers exist by default, and provide core networking functionality:
+
+bridge: The default network driver. If you don’t specify a driver, this is the type of network you are creating. Bridge networks are usually used when your applications run in standalone containers that need to communicate. See bridge networks.
+
+host: For standalone containers, remove network isolation between the container and the Docker host, and use the host’s networking directly. host is only available for swarm services on Docker 17.06 and higher. See use the host network.
+
+overlay: Overlay networks connect multiple Docker daemons together and enable swarm services to communicate with each other. You can also use overlay networks to facilitate communication between a swarm service and a standalone container, or between two standalone containers on different Docker daemons. This strategy removes the need to do OS-level routing between these containers. See overlay networks.
+
+macvlan: Macvlan networks allow you to assign a MAC address to a container, making it appear as a physical device on your network. The Docker daemon routes traffic to containers by their MAC addresses. Using the macvlan driver is sometimes the best choice when dealing with legacy applications that expect to be directly connected to the physical network, rather than routed through the Docker host’s network stack. See Macvlan networks.
+
+Note: The macvlan networking driver only works on Linux hosts, and is not supported on Docker Desktop for Mac, Docker Desktop for Windows, or Docker EE for Windows Server.
+
+none: For this container, disable all networking. Usually used in conjunction with a custom network driver. none is not available for swarm services. See disable container networking.
+
+Network plugins: You can install and use third-party network plugins with Docker. These plugins are available from Docker Hub or from third-party vendors. See the vendor’s documentation for installing and using a given network plugin.
+
+
+
+Docker uses host network to container with no network isolation.
+
+Host mode networking can be useful to optimize performance, and in situations where a container needs to handle a large range of ports, as it does not require network address translation (NAT), and no “userland-proxy” is created for each port.
+
+We can take an example to deploy application like nginx which uses 80 port by default on the Docker host machine.
+
+Note: 
+1)Other applications running on Docker host already listen on 80, nginx container need to be customized to listen on different port number
+2)host network works only on Linux machines
+
+Start a container to run on detach mode (run in background)
+
+docker container run -d --rm --network host --name test-nginx nginx
+
+How to check netnamespaces create for a container?
+
+root@test:~# docker container inspect --format '{{.State.Pid}}' 681f6fb46149
+2485
+
+Now check netns directory on docker host
+
+root@test:~# ls -l /proc/2485/ns/
+total 0
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 cgroup -> 'cgroup:[4026531835]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 ipc -> 'ipc:[4026532306]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 mnt -> 'mnt:[4026532304]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:12 net -> 'net:[4026532309]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 pid -> 'pid:[4026532307]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 pid_for_children -> 'pid:[4026532307]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 user -> 'user:[4026531837]'
+lrwxrwxrwx 1 root root 0 Apr 26 06:16 uts -> 'uts:[4026532305]'
+root@test:~#
+
+
+How to configure overlay networking on two docker host machines without using docker swarm?
+
+https://docker-k8s-lab.readthedocs.io/en/latest/docker/docker-etcd.html
+
+Images:
+https://dev.vividbreeze.com/wp-content/uploads/2018/08/customBridgeNetworkDockerDNS.png --> Docker bridge network
+https://miro.medium.com/max/1400/0*cMUND9w1bO1o5sPe.png
+https://miro.medium.com/max/1264/0*f39Sdh-13He13vn7.jpg --> bridge share network
+https://i0.wp.com/lukeangel.co/wp-content/uploads/2017/01/docker-networking-diagram-1.png?w=1030 --> Docker macvlan (802.1Q trunk)
+
+https://devopsnepal.files.wordpress.com/2018/02/overlay.png?w=656
+https://miro.medium.com/max/1400/1*Pk3a-75rUpaF74WKN5n78w.jpeg
+https://docker-k8s-lab.readthedocs.io/en/latest/_images/docker-overlay.png
+
+Macvlan and ipvlan:
+
+https://sreeninet.wordpress.com/2016/05/29/macvlan-and-ipvlan/
+
+Note:
+When you create a macvlan network, it can either be in bridge mode or 802.1q trunk bridge mode.
+
+In bridge mode, macvlan traffic goes through a physical device on the host.
+
+In 802.1q trunk bridge mode, traffic goes through an 802.1q sub-interface which Docker creates on the fly. This allows you to control routing and filtering at a more granular level.
+
+
+Summary:
+User-defined bridge networks are best when you need multiple containers to communicate on the same Docker host.
+Host networks are best when the network stack should not be isolated from the Docker host, but you want other aspects of the container to be isolated.
+Overlay networks are best when you need containers running on different Docker hosts to communicate, or when multiple applications work together using swarm services.
+Macvlan networks are best when you are migrating from a VM setup or need your containers to look like physical hosts on your network, each with a unique MAC address.
+Third-party network plugins allow you to integrate Docker with specialized network stacks.
+
+
+
+Network:
+https://docs.docker.com/network/
+https://docs.docker.com/network/network-tutorial-macvlan/
+https://docs.docker.com/network/macvlan/

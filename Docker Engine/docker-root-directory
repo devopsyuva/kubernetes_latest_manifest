@@ -1,0 +1,53 @@
+Some time, we need to change the docker root directory if we are running out of disk space.
+
+lets say we have docker data present by default under /var/lib/docker and now we need to change the path since the disk is full (new path: /backup/docker)
+
+1)Take backup of the current directory using
+
+tar -zcvf docker-backup-$(date +%s).tar.gz /var/lib/docker
+
+2)Now stop the docker service (Ubuntu 16.04/18.04 later)
+
+systemctl stop docker
+
+3)Create a directory "/backup" to set a new path
+
+mkdir /backup
+
+4)copy the directory to new location from /var/lib/docker to /backup
+
+rsync -avzh /var/lib/docker /backup
+
+5)lets update systemd with new location
+
+vi /lib/systemd/system/docker-service
+
+under [Service], do not remove any options on that line just add below option
+
+ExecStart= ***** -g /backup/docker *******
+
+save and exit
+
+
+or
+
+Above changes will effect for linux systems, if you want to apply new location changes for platform independent systems
+
+open/create file "/etc/docker/daemon.json" and add below line
+
+
+{
+	"data-root": "/backup-docker",
+	...
+	...
+}
+
+save and exit. Now restart docker service, no need to reload systemd service.
+
+6)Now reload systemd and start docker
+
+systemctl daemon-reload
+
+systemctl start docker
+
+7)verify the changes using docker info command and by creating new container to see if that container details are stored under /backup/docker/containers or we can check with ps aux command to see if docker process is running wth new option we have passed "-g /backup/docker"

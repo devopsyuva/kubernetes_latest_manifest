@@ -1,0 +1,67 @@
+In order to configure kuberntes dashboard, update yaml file with below context:
+
+wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-rc7/aio/deploy/recommended.yaml
+
+Update kubernetes-dashboard service to type: NodePort and delete the entry related to secret "kubernetes-dashboard-certs" and namespace "kubernetes-dashboard".
+
+
+Now lets use self signed certificates for out kubenretes deployment POD:
+
+mkdir certs
+cd certs
+
+key: openssl genrsa -out dashboard.key 2048
+csr: openssl req -new -key dashboard.key -out dashboard.csr -subj "/C=IN/ST=Telanagana/L=hyderabad/O=sudherdemo/OU=sudherdemo/CN=kubernetes-dashboard"
+crt: openssl x509 -req -in dashboard.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out dashboard.crt -days 500
+
+Once above task was done, execute below command to pass the certs as secrets:
+
+kubectl create namespace kubernetes-dashboard
+kubectl create secret generic kubernetes-dashboard-certs --from-file=certs -n kubernetes-dashboard
+
+Now, we are good to deploy kubernetes dashboard and metric scraper:
+
+kubectl create -f recommended.yaml 
+
+verify the resource created are deployed properly and check the kubernetes-dashboard service nodeport:
+
+kubectl get all -n kubernetes-dashboard
+
+Example:
+
+root@kubernetesmanager:~# kubectl get all -n kubernetes-dashboard
+NAME                                            READY   STATUS    RESTARTS   AGE
+pod/dashboard-metrics-scraper-b68468655-8nt6v   1/1     Running   0          32m
+pod/kubernetes-dashboard-64999dbccd-28x9q       1/1     Running   0          8m6s
+
+NAME                                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
+service/dashboard-metrics-scraper   ClusterIP   10.107.143.193   <none>        8000/TCP        44m
+service/kubernetes-dashboard        NodePort    10.101.99.89     <none>        443:31695/TCP   44m
+
+NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/dashboard-metrics-scraper   1/1     1            1           44m
+deployment.apps/kubernetes-dashboard        1/1     1            1           44m
+
+NAME                                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/dashboard-metrics-scraper-b68468655   1         1         1       44m
+replicaset.apps/kubernetes-dashboard-64999dbccd       1         1         1       44m
+root@kubernetesmanager:~#
+
+After that we have to assign proper RBAC for kubernetes-dashboard serviceaccount for authentication and authorization:
+
+kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:kubernetes-dashboard
+
+
+Now get the token for the service account with RBAC applied as above:
+
+root@kubernetesmanager:~# kubectl get secret $(kubectl get serviceaccount kubernetes-dashboard -o jsonpath="{.secrets[0].name}" -n kubernetes-dashboard) -o jsonpath="{.data.token}" -n kubernetes-dashboard | base64 --decode
+
+eyJhbGciOiJSUzI1NiIsImtpZCI6IjlhTVh0cDZhYllGYW52QUVod2wwRUpDWDdBVFNKVTByTjhTWUY1a2xhZmsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi05NWw4cyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjgyNjAzZmYyLWEwZjktNDE1Mi04NDIzLWE0MzgyZDM0OTczMyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.Dc3ioPnBLuxbXhHn2zvQ_taJQLmZvOhMu71nygttIdgZJHu1w3G4AjiBdyttqhAWU_8BL-qblV1hL3Vf7IiO-pX_3ZJ3ijctb9VpoPVyt3LQoHkr5P73_fi6q9MUI_8dXRGUmTGc1z0KBoMudgBfmqXja1WTPzUYejvu8R6conm62yYNcjpBTWLsjKiVt20DEyf5xivOZdJFEiRcHwuw0phiFI8RZkRzTmrldfe3iIknDCEyUHmZhNB3-fAtxGN98OT_Gju5QsEywsQn9CNS-fnkxKvXMQm-ZUyiX9WPEhyNfcPWAO_veFCDbyq7H4FvbLBCnIJwiDBhDxTW6nIJuw
+
+
+
+Done, now we can go the browser and access the kubernetes dashboard using https://<master>/<node>_ip:NodePort
+
+
+Reference: https://github.com/kubernetes/dashboard/releases
+nohup kubectl proxy --address="192.168.0.50" -p 443 --accept-hosts='^*$' &

@@ -1,0 +1,31 @@
+apiVersion: apps/v1 #extensions/v1beta1 for before v1.16
+kind: ReplicaSet
+metadata:
+  name: test-rs
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [test-app, dev]}
+  template:
+    metadata:
+      labels:
+        app: test-app
+        app: dev
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.19.0
+        ports:
+        - containerPort: 80
+        volumeMounts:
+         - mountPath: /usr/share/nginx/html/index.html
+           name: www
+           subPath: index.html
+      volumes:
+        - name: www
+          downwardAPI:
+            items:
+              - path: "index.html"
+                fieldRef:
+                  fieldPath: metadata.name

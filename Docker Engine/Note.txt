@@ -1,0 +1,65 @@
+Run docker as non-root user:
+
+https://docs.docker.com/install/linux/linux-postinstall/
+
+To create the docker group and add your user on Linux machine:
+
+Create the docker group.
+
+$ sudo groupadd docker
+Add your user to the docker group.
+
+$ sudo usermod -aG docker $USER
+
+On Linux, you can also run the following command to activate the changes to groups:
+
+$ newgrp docker 
+
+Docker capability:
+
+$ curl https://raw.githubusercontent.com/docker/docker/master/contrib/check-config.sh > check-config.sh
+
+$ bash ./check-config.sh #Works only for Linux, Not MacOS
+
+Firewall:
+
+UFW: Set DEFAULT_FORWARD_POLICY="ACCEPT" in your configuration.
+
+firewalld: Add rules similar to the following to your policy (one for incoming requests and one for outgoing requests). Be sure the interface names and chain names are correct.
+
+<direct>
+  [ <rule ipv="ipv6" table="filter" chain="FORWARD_direct" priority="0"> -i zt0 -j ACCEPT </rule> ]
+  [ <rule ipv="ipv6" table="filter" chain="FORWARD_direct" priority="0"> -o zt0 -j ACCEPT </rule> ]
+</direct>
+
+
+Note:
+
+If you initially run Docker CLI commands using sudo before adding your user to the docker group, you may see the following error, which indicates that your ~/.docker/ directory was created with incorrect permissions due to the sudo commands.
+
+WARNING: Error loading config file: /home/user/.docker/config.json -
+stat /home/user/.docker/config.json: permission denied
+To fix this problem, either remove the ~/.docker/ directory (it is recreated automatically, but any custom settings are lost), or change its ownership and permissions using the following commands:
+
+$ sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
+$ sudo chmod g+rwx "$HOME/.docker" -R
+
+Docker is automatically configured to start on boot using upstart. To disable this behavior, use the following command:
+
+$ echo manual | sudo tee /etc/init/docker.override
+
+
+How to keep container alive even after daemon downtime? (https://docs.docker.com/config/containers/live-restore/)
+
+vi /etc/docker/daemon.json
+
+{
+  "live-restore": true
+}
+
+systemctl daemon-reload
+systemctl restart docker
+
+https://docs.docker.com/config/containers/live-restore/
+
+Reference: https://docs.docker.com/install/linux/linux-postinstall/

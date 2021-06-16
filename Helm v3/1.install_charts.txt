@@ -1,0 +1,333 @@
+Lets try to install sample nginx web application from the repo available.
+
+First search for nginx chart in repo available on your helm.
+
+root@kubernetesmanager:~# helm search repo nginx
+NAME                       	CHART VERSION	APP VERSION	DESCRIPTION                                       
+stable/nginx-ingress       	1.38.0       	0.32.0     	An nginx Ingress controller that uses ConfigMap...
+stable/nginx-ldapauth-proxy	0.1.3        	1.13.5     	nginx proxy with ldapauth                         
+stable/nginx-lego          	0.3.1        	           	Chart for nginx-ingress-controller and kube-lego  
+stable/gcloud-endpoints    	0.1.2        	1          	DEPRECATED Develop, deploy, protect and monitor...
+root@kubernetesmanager:~# helm search hub nginx
+URL                                               	CHART VERSION	APP VERSION   	DESCRIPTION                                       
+https://hub.helm.sh/charts/banzaicloud-stable/n...	2.5.0        	2.5.0         	A Demo application for the logging-operator       
+https://hub.helm.sh/charts/banzaicloud-stable/n...	2.5.0        	2.5.0         	A Helm chart for Kubernetes                       
+https://hub.helm.sh/charts/banzaicloud-stable/n...	2.5.0        	2.5.0         	A Demo application for the logging-operator       
+https://hub.helm.sh/charts/banzaicloud-stable/n...	2.5.0        	2.5.0         	A Demo application for the logging-operator       
+https://hub.helm.sh/charts/banzaicloud-stable/n...	2.5.0        	2.5.0         	A Demo application for the logging-operator AWS...
+https://hub.helm.sh/charts/bitnami/nginx-ingres...	5.3.22       	0.32.0        	Chart for the nginx Ingress controller            
+https://hub.helm.sh/charts/bitnami/nginx          	5.6.0        	1.17.10       	Chart for the nginx server                        
+...
+...
+
+From the above output, I will install nginx web chart from helm hub repo.
+
+root@kubernetesmanager:~# helm repo add bitnami https://charts.bitnami.com/bitnami
+"bitnami" has been added to your repositories
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm install nginx-test bitnami/nginx
+NAME: nginx-test
+LAST DEPLOYED: Sat May 23 10:50:30 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Get the NGINX URL:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: 'kubectl get svc --namespace default -w nginx-test'
+
+  export SERVICE_IP=$(kubectl get svc --namespace default nginx-test --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+  echo "NGINX URL: http://$SERVICE_IP/"
+root@kubernetesmanager:~#
+
+
+above, we can see that it listed the steps to be followed to access the nginx application through service loadbalancer.
+
+we can also see the list of charts deployed through helm, using below command:
+
+root@kubernetesmanager:~# helm ls
+NAME      	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP VERSION
+nginx-test	default  	1       	2020-05-23 10:50:30.640391334 +0000 UTC	deployed	nginx-5.6.0	1.17.10    
+root@kubernetesmanager:~# 
+
+root@kubernetesmanager:~# helm status nginx-test
+NAME: nginx-test
+LAST DEPLOYED: Sat May 23 10:50:30 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Get the NGINX URL:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: 'kubectl get svc --namespace default -w nginx-test'
+
+  export SERVICE_IP=$(kubectl get svc --namespace default nginx-test --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+  echo "NGINX URL: http://$SERVICE_IP/"
+root@kubernetesmanager:~# 
+
+we can see that nginx was installed with version 1.17.10 and chart version was 5.6.0
+
+Now lets, access application using ClusterIP and NodePort:
+
+
+root@kubernetesmanager:~# kubectl get all
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/nginx-test-84ffbf9d6d-srjjq   1/1     Running   0          3m45s
+
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+service/kubernetes   ClusterIP      10.96.0.1      <none>        443/TCP                      21d
+service/nginx-test   LoadBalancer   10.109.49.81   <pending>     80:32167/TCP,443:31828/TCP   3m46s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-test   1/1     1            1           3m46s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-test-84ffbf9d6d   1         1         1       3m45s
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# curl -I 10.109.49.81
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sat, 23 May 2020 10:57:24 GMT
+Content-Type: text/html
+Content-Length: 612
+Last-Modified: Tue, 14 Apr 2020 16:08:53 GMT
+Connection: keep-alive
+ETag: "5e95e015-264"
+X-Frame-Options: SAMEORIGIN
+Accept-Ranges: bytes
+
+root@kubernetesmanager:~#
+
+
+Worker node ip where your application is deployed: 192.168.0.51
+
+root@kubernetesmanager:~# curl -I 192.168.0.51:32167
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sat, 23 May 2020 10:56:56 GMT
+Content-Type: text/html
+Content-Length: 612
+Last-Modified: Tue, 14 Apr 2020 16:08:53 GMT
+Connection: keep-alive
+ETag: "5e95e015-264"
+X-Frame-Options: SAMEORIGIN
+Accept-Ranges: bytes
+
+root@kubernetesmanager:~#
+
+How to apply custom values to the chart while deploying using helm?
+
+First, check the chart values using below command which is present in repo.
+
+
+root@kubernetesmanager:~# helm show values bitnami/nginx
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters: imageRegistry and imagePullSecrets
+##
+# global:
+#   imageRegistry: myRegistryName
+#   imagePullSecrets:
+#     - myRegistryKeySecretName
+
+## Bitnami NGINX image version
+## ref: https://hub.docker.com/r/bitnami/nginx/tags/
+##
+image:
+  registry: docker.io
+  repository: bitnami/nginx
+  tag: 1.17.10-debian-10-r46
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: IfNotPresent
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ##
+  # pullSecrets:
+  #   - myRegistryKeySecretName
+...
+...
+
+
+How to uninstall charts deployed?
+
+root@kubernetesmanager:~# kubectl get all
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/nginx-test-84ffbf9d6d-srjjq   1/1     Running   0          3m45s
+
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+service/kubernetes   ClusterIP      10.96.0.1      <none>        443/TCP                      21d
+service/nginx-test   LoadBalancer   10.109.49.81   <pending>     80:32167/TCP,443:31828/TCP   3m46s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-test   1/1     1            1           3m46s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-test-84ffbf9d6d   1         1         1       3m45s
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm ls
+NAME      	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP VERSION
+nginx-test	default  	1       	2020-05-23 10:50:30.640391334 +0000 UTC	deployed	nginx-5.6.0	1.17.10    
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm uninstall nginx-test
+release "nginx-test" uninstalled
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm ls
+NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# kubectl get all
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   21d
+root@kubernetesmanager:~#
+
+
+we can save the output in file with key=values you want to apply to the chart deployment.
+
+root@kubernetesmanager:~# helm ls
+NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# cat custom-values.yaml 
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+root@kubernetesmanager:~# helm install nginx-test -f custom-values.yaml bitnami/nginx
+NAME: nginx-test
+LAST DEPLOYED: Sat May 23 13:31:23 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Get the NGINX URL:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: 'kubectl get svc --namespace default -w nginx-test'
+
+  export SERVICE_IP=$(kubectl get svc --namespace default nginx-test --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+  echo "NGINX URL: http://$SERVICE_IP/"
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm ls
+NAME      	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP VERSION
+nginx-test	default  	1       	2020-05-23 13:31:23.132618408 +0000 UTC	deployed	nginx-5.6.0	1.17.10    
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# kubectl get all
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/nginx-test-7cbb9c44fb-fwcqj   1/1     Running   0          99s
+
+NAME                 TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)                      AGE
+service/kubernetes   ClusterIP      10.96.0.1     <none>        443/TCP                      21d
+service/nginx-test   LoadBalancer   10.97.83.32   <pending>     80:30839/TCP,443:30187/TCP   99s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-test   1/1     1            1           99s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-test-7cbb9c44fb   1         1         1       99s
+root@kubernetesmanager:~#
+
+Lets verify the custom changes are applied to the POD like resources:
+
+root@kubernetesmanager:~# kubectl get pods -o json | jq '.items[].spec.containers[].resources'
+{
+  "limits": {
+    "cpu": "100m",
+    "memory": "128Mi"
+  },
+  "requests": {
+    "cpu": "100m",
+    "memory": "128Mi"
+  }
+}
+root@kubernetesmanager:~#
+
+Second method to apply the custom values while deploying the application is using set option:
+
+root@kubernetesmanager:~# helm install nginx-test --set resources.limits.cpu=100m,resources.limits.memory=128Mi bitnami/nginx
+NAME: nginx-test
+LAST DEPLOYED: Sat May 23 13:38:59 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Get the NGINX URL:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: 'kubectl get svc --namespace default -w nginx-test'
+
+  export SERVICE_IP=$(kubectl get svc --namespace default nginx-test --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
+  echo "NGINX URL: http://$SERVICE_IP/"
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm ls
+NAME      	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP VERSION
+nginx-test	default  	1       	2020-05-23 13:38:59.971607106 +0000 UTC	deployed	nginx-5.6.0	1.17.10    
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# kubectl get pods -o json | jq '.items[].spec.containers[].resources'
+{
+  "limits": {
+    "cpu": "100m",
+    "memory": "128Mi"
+  },
+  "requests": {
+    "cpu": "100m",
+    "memory": "128Mi"
+  }
+}
+root@kubernetesmanager:~#
+
+Above, u can see both are assigned because. In kubernetes, if limits are specificed and requests is not set, but kubernetes will assign same value of limits to requests.
+
+We can install packages in different ways like:
+
+using directory, if charts are placed in a directory and deploy it #helm install nginx-test path/of/directory
+
+using local archive, #helm install nginx-test nginx-app.1.5.0-tar.gz
+
+using url, install charts directly from repo instead of downloading to the machine
+#helm install nginx-test https://example.com/charts/foo-1.2.3.tgz
+
+Few commands:
+#helm uninstall --keep-history nginx-test
+#helm list --all
+
+
+root@kubernetesmanager:~# helm ls
+NAME      	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP VERSION
+nginx-test	default  	1       	2020-05-23 13:38:59.971607106 +0000 UTC	deployed	nginx-5.6.0	1.17.10    
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm uninstall --keep-history nginx-test
+release "nginx-test" uninstalled
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm ls
+NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+root@kubernetesmanager:~# 
+
+root@kubernetesmanager:~# helm ls --uninstalled
+NAME      	NAMESPACE	REVISION	UPDATED                                	STATUS     	CHART      	APP VERSION
+nginx-test	default  	1       	2020-05-23 13:38:59.971607106 +0000 UTC	uninstalled	nginx-5.6.0	1.17.10    
+root@kubernetesmanager:~# 
+
+
+root@kubernetesmanager:~# helm history nginx-test
+REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION            
+1       	Sat May 23 13:38:59 2020	uninstalled	nginx-5.6.0	1.17.10    	Uninstallation complete
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm uninstall nginx-test
+release "nginx-test" uninstalled
+root@kubernetesmanager:~# helm history nginx-test
+Error: release: not found
+root@kubernetesmanager:~# helm ls --uninstalled
+NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+root@kubernetesmanager:~#

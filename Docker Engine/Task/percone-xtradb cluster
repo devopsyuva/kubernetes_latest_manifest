@@ -1,0 +1,31 @@
+docker network create pxc-network
+
+docker run -d \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e CLUSTER_NAME=cluster1 \
+  --name=node1 \
+  --net=pxc-network \
+  percona/percona-xtradb-cluster:5.7
+
+
+docker run -d \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e CLUSTER_NAME=cluster1 \
+  -e CLUSTER_JOIN=node1 \
+  --name=node2 \
+  --net=pxc-network \
+  percona/percona-xtradb-cluster:5.7
+
+docker run -d \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e CLUSTER_NAME=cluster1 \
+  -e CLUSTER_JOIN=node1 \
+  --name=node3 \
+  --net=pxc-network \
+  percona/percona-xtradb-cluster:5.7
+
+docker exec -it node1 /usr/bin/mysql -uroot -proot
+
+show status like 'wsrep%';
+
+https://www.percona.com/doc/percona-xtradb-cluster/LATEST/install/docker.html

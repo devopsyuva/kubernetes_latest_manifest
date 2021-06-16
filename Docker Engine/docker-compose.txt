@@ -1,0 +1,175 @@
+Installation:
+=============
+sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+Note: For alpine, the following dependency packages are needed: py-pip, python-dev, libffi-dev, openssl-dev, gcc, libc-dev, and make.
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+Optional setting: sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+#docker-compose --version
+
+
+
+version: "3"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    volumes:
+      - jenkins_data:/var/jenkins_home
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+
+volumes:
+  jenkins_data: {}
+---
+version: '3'
+
+services:
+
+  registry:
+    container_name: docker-registry
+    restart: always
+    image: registry:2
+    ports:
+      - 5000:5000
+    volumes:
+      - docker-registry:/var/lib/registry
+
+volumes:
+  docker-registry-data: {}
+---
+version: "3"
+
+services:
+  portainer:
+    image: portainer/portainer
+    container_name: portainer
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9000:9000"
+
+volumes:
+  portainer_data: {}
+---
+version: '3.3'
+
+services:
+   db:
+     image: mysql:5.7
+     volumes:
+       - db_data:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: somewordpress
+       MYSQL_DATABASE: wordpress
+       MYSQL_USER: wordpress
+       MYSQL_PASSWORD: wordpress
+
+   wordpress:
+     depends_on:
+       - db
+     image: wordpress:latest
+     ports:
+       - "8000:80"
+     restart: always
+     environment:
+       WORDPRESS_DB_HOST: db:3306
+       WORDPRESS_DB_USER: wordpress
+       WORDPRESS_DB_PASSWORD: wordpress
+       WORDPRESS_DB_NAME: wordpress
+volumes:
+    db_data: {}
+---
+version: "2"
+services:
+  node1:
+    container_name: node1
+    image: percona/percona-xtradb-cluster:5.7
+    environment:
+      - CLUSTER_NAME=cluster1
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - pxc-network
+  node2:
+    container_name: node2
+    image: percona/percona-xtradb-cluster:5.7
+    environment:
+      - CLUSTER_NAME=cluster1
+      - CLUSTER_JOIN=node1
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - pxc-network
+  node3:
+    container_name: node3
+    image: percona/percona-xtradb-cluster:5.7
+    environment:
+      - CLUSTER_NAME=cluster1
+      - CLUSTER_JOIN=node1
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - pxc-network
+networks:
+  pxc-network:
+    driver: bridge
+
+FROM python:3.6
+MAINTAINER sudhams reddy duba<dubareddy.383@gmail.com>
+RUN pip install pymemcache
+COPY manage.py /root/
+WORKDIR /root
+CMD ["python3", "/root/manage.py"]
+
+
+from pymemcache.client import base
+# Don't forget to run `memcached' before running this next line:
+client = base.Client(('cacheserver', 11211))
+# Once the client is instantiated, you can access the cache:
+client.set('visualpath', 'Docker and Kubernetes Demo')
+# Retrieve previously set data again:
+client.get('visualpath')
+
+
+version: '3'
+services:
+  pythonserver:
+    build: .
+    container_name: pythonserver
+    links:
+      - cacheserver
+    networks:
+      - custom_net
+  cacheserver:
+    image: memcached
+    container_name: cacheserver
+    entrypoint:
+     - memcached
+    networks:
+      - custom_net
+networks:
+  custom_net:
+      driver: bridge
+
+++
+    test_3:
+        container_name: test_3
+        image: some:image
+        networks:
+            testing_net:
+                ipv4_address: 172.28.1.3
+
+networks:
+    testing_net:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.28.0.0/16
+++
+
+Sample applications: https://docs.docker.com/engine/examples/postgresql_service/

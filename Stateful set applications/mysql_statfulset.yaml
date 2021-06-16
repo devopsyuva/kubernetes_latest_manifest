@@ -1,0 +1,190 @@
+/var/backup 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
+
+root@containerdmanager:~# ls -l /var/backup
+total 12
+drwxr-xr-x 5 999 root 4096 Aug 16 14:25 data0
+drwxr-xr-x 5 999 root 4096 Aug 16 14:24 data1
+drwxr-xr-x 5 999 root 4096 Aug 16 14:24 data2
+root@containerdmanager:~#
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-data0
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: 192.168.1.120
+    path: "/var/backup/data0"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-data1
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: 192.168.1.120
+    path: "/var/backup/data1"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-data2
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: 192.168.1.120
+    path: "/var/backup/data2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-server
+  labels:
+    app: mysqldb
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    name: db
+  clusterIP: None
+  selector:
+    db: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      db: mysql # has to match .spec.template.metadata.labels
+  serviceName: "mysql-server"
+  #podManagementPolicy: Parallel #(default: Ordered)
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        db: mysql # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+          name: db
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "test1234"
+        - name: MYSQL_ROOT_HOST
+          value: '%,mysql-server'
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        livenessProbe:
+          exec:
+            command: ["mysqladmin", "ping"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            # Check we can execute queries over TCP (skip-networking is off).
+            command: ["mysql", "-h", "$(MY_POD_IP)", "-e", "SELECT 1"]
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+  volumeClaimTemplates:
+  - metadata:
+      name: db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: manual
+      resources:
+        requests:
+          storage: 1Gi
+
+Inside mysql pod:
+
+root@mysql-0:/# cat /etc/hosts
+# Kubernetes-managed hosts file.
+127.0.0.1 localhost
+::1 localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+fe00::0 ip6-mcastprefix
+fe00::1 ip6-allnodes
+fe00::2 ip6-allrouters
+10.244.155.88 mysql-0.mysql-server.default.svc.cluster.local  mysql-0
+root@mysql-0:/# 
+
+root@mysql-0:/# env
+KUBERNETES_SERVICE_PORT_HTTPS=443
+KUBERNETES_SERVICE_PORT=443
+MYSQL_MAJOR=5.7
+HOSTNAME=mysql-0
+PWD=/
+MYSQL_ROOT_PASSWORD=test1234
+HOME=/root
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+MYSQL_VERSION=5.7.31-1debian10
+GOSU_VERSION=1.12
+TERM=xterm
+MYSQL_ROOT_HOST=%
+SHLVL=1
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_PORT=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP_PORT=443
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+_=/usr/bin/env
+root@mysql-0:/#
+
+#kubectl run -it --rm --image=mysql:5.6 --restart=Never mysql-client -- mysql -h mysql -ppassword
+
+root@containerdmanager:~# kubectl run -it --rm --image=mysql:5.7 --restart=Never mysql-client -- mysql -h mysql-server -ptest1234
+If you don't see a command prompt, try pressing enter.
+
+mysql> 
+mysql> 
+mysql> 
+mysql> 
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.01 sec)
+
+mysql> \q
+Bye
+pod "mysql-client" deleted

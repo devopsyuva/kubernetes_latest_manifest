@@ -1,0 +1,126 @@
+# These commands get run inside of your VM.
+
+# Create the directory to store the configuration file.
+sudo mkdir -p /etc/systemd/system/docker.service.d
+
+# Create a new file to store the daemon options.
+sudo nano /etc/systemd/system/docker.service.d/options.conf
+
+# Now make it look like this and save the file when you're done:
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H unix:// -H tcp://0.0.0.0:2375
+
+or
+
+++
+
+Set the hosts array in the /etc/docker/daemon.json to connect to the UNIX socket and an IP address, as follows:
+
+{
+  "hosts": ["unix:///var/run/docker.sock", "tcp://127.0.0.1:2375"],
+  "dns": ["8.8.8.8", "8.8.4.4"]
+}
+++
+
+# Reload the systemd daemon.
+sudo systemctl daemon-reload
+
+# Restart Docker.
+sudo systemctl restart docker
+
+Running docker daemons with secure:
+===================================
+If you need Docker to be reachable through the network in a safe manner, you can enable TLS by specifying the tlsverify flag and pointing Docker’s tlscacert flag to a trusted CA certificate.
+
+On the docker daemon host run below command to generate CA private and public key
+
+openssl genrsa -aes256 -out ca-key.pem 4096
+openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem
+
+Note: Pass necessary details under Common Name (hostname of the docker daemon or IP address)
+
+
+Now lets create server key and certificate signing request
+
+openssl genrsa -out server-key.pem 4096
+openssl req -subj "/CN=ubuntuserver" -sha256 -new -key server-key.pem -out server.csr
+
+Error: Can't load /root/.rnd into RNG
+139977488892352:error:2406F079:random number generator:RAND_load_file:Cannot open file:../crypto/rand/randfile.c:88:Filename=/root/.rnd
+
+Solution: open /etc/ssl/openssl.cnf file and comment below section
+#RANDFILE               = $ENV::HOME/.rnd
+
+
+Since TLS connections can be made through IP address as well as DNS name, the IP addresses need to be specified when creating the certificate. For example, to allow connections using 10.10.10.20 and 127.0.0.1:
+
+echo subjectAltName = DNS:ubuntuserver,IP:192.168.0.48,IP:127.0.0.1 >> extfile.cnf
+echo extendedKeyUsage = serverAuth >> extfile.cnf
+
+Now generate signed certificate for the above server.csr file
+
+openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem   -CAcreateserial -out server-cert.pem -extfile extfile.cnf
+
+
+For client authentication, create a client key and certificate signing request:
+
+openssl genrsa -out key.pem 4096
+openssl req -subj '/CN=PRINHYLTPAP0420.local' -new -key key.pem -out client.csr
+echo extendedKeyUsage = clientAuth > extfile-client.cnf
+
+Note: PRINHYLTPAP0420.local is client hostname, from where client will communicate to docker daemon
+
+
+Next, generate a signed certificate:
+
+openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem   -CAcreateserial -out cert.pem -extfile extfile-client.cnf
+
+
+After generating cert.pem and server-cert.pem you can safely remove the two certificate signing requests and extensions config files:
+
+rm -v client.csr server.csr extfile.cnf extfile-client.cnf
+
+To protect your keys from accidental damage, remove their write permissions. To make them only readable by you, change file modes as follows:
+
+chmod -v 0400 ca-key.pem key.pem server-key.pem
+
+Certificates can be world-readable, but you might want to remove write access to prevent accidental damage:
+
+chmod -v 0444 ca.pem server-cert.pem cert.pem
+
+Now modify the docker daemonset service to listen on secured port 2376 with tls enabled:
+
+systemctl edit docker
+++
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd --tlsverify --tlscacert=ca.pem --tlscert=server-cert.pem --tlskey=server-key.pem \
+  -H tcp://0.0.0.0:2376
+++
+
+Note: Above entry will allow only tcp and tls communication, which will disable unix socket communication
+
+reload the systemctl daemon and restart docker
+systemctl daemon-reload 
+systemctl restart docker
+
+
+Now verify the connection to docker daemon through client for which certificates created:
+
+docker --tlsverify --tlscacert=ca.pem --tlscert=cert.pem --tlskey=key.pem   -H=192.168.1.48:2376 image ls
+
+or
+
+API call: curl https://$HOST:2376/images/json --cert ~/.docker/cert.pem --key ~/.docker/key.pem --cacert ~/.docker/ca.pem
+
+Instead of passing the tls option for every command, we can add the details in a secured place to load by docker client:
+
+mkdir -pv ~/.docker
+cp -v {ca,cert,key}.pem ~/.docker
+
+export DOCKER_HOST=tcp://$HOST:2376 DOCKER_TLS_VERIFY=1
+
+
+Reference:
+https://docs.docker.com/engine/security/https/

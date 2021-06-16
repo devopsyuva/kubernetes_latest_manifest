@@ -1,0 +1,58 @@
+Docker Machine allows you to provision Docker machines in a variety of environments, including virtual 
+machines that reside on your local system, on cloud providers, or on bare metal servers (physical computers).
+Docker Machine creates a Docker host, and you use the Docker Engine client as needed to build images and create containers on the host.
+
+
+The driver determines where the virtual machine is created. For example, on a local Mac or Windows system, the driver is typically Oracle VirtualBox. For provisioning physical machines, a generic driver is provided. For cloud providers, Docker Machine supports drivers such as AWS, Microsoft Azure, DigitalOcean, and many more.
+
+
+On linux:
+
+base=https://github.com/docker/machine/releases/download/v0.16.0 &&
+  curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/tmp/docker-machine &&
+  sudo mv /tmp/docker-machine /usr/local/bin/docker-machine &&
+  chmod +x /usr/local/bin/docker-machine
+
+
+List of drivers supported: https://docs.docker.com/machine/drivers/
+
+
+Default OS: https://docs.docker.com/machine/drivers/os-base/
+
+
+➜  ~ docker-machine create --driver virtualbox --virtualbox-memory "3072" --virtualbox-cpu-count "2" --virtualbox-disk-size "50000" dockermachine
+Running pre-create checks...
+Creating machine...
+(dockermachine) Copying /Users/sudhamsd/.docker/machine/cache/boot2docker.iso to /Users/sudhamsd/.docker/machine/machines/dockermachine/boot2docker.iso...
+(dockermachine) Creating VirtualBox VM...
+(dockermachine) Creating SSH key...
+(dockermachine) Starting the VM...
+(dockermachine) Check network to re-create if needed...
+(dockermachine) Waiting for an IP...
+Waiting for machine to be running, this may take a few minutes...
+Detecting operating system of created instance...
+Waiting for SSH to be available...
+Detecting the provisioner...
+Provisioning with boot2docker...
+Copying certs to the local machine directory...
+Copying certs to the remote machine...
+Setting Docker configuration on the remote daemon...
+Checking connection to Docker...
+Docker is up and running!
+To see how to connect your Docker Client to the Docker Engine running on this virtual machine, run: docker-machine env dockermachine
+➜  ~ docker-machine ls
+NAME            ACTIVE   DRIVER       STATE     URL                         SWARM   DOCKER      ERRORS
+dockermachine   -        virtualbox   Running   tcp://192.168.99.113:2376           v19.03.12   
+➜  ~ 
+➜  ~ 
+➜  ~ docker-machine ssh dockermachine
+   ( '>')
+  /) TC (\   Core is distributed with ABSOLUTELY NO WARRANTY.
+ (/-_--_-\)           www.tinycorelinux.net
+
+docker@dockermachine:~$ 
+docker@dockermachine:~$ 
+docker@dockermachine:~$ 
+docker@dockermachine:~$ sudo -i
+root@dockermachine:~# 
+root@dockermachine:~# 

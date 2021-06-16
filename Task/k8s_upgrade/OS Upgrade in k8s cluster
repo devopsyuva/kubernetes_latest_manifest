@@ -1,0 +1,33 @@
+In order to do some maintainence work on the K8s nodes or to upgrade the OS,
+we can follow the below steps:
+
+1)Check the PODs running on the node
+kubectl get pods -o wide
+
+2)Evict the PODs on that node, which you want to handle the maintainence:
+kubectl drain/cordon [node_name] --ignore-daemonsets [--force]
+
+Now we can run some maintaince work
+
+3)After completion, bring back the node
+kubectl uncordon [node_name]
+
+4)To remove the node from the k8s cluster
+kubectl delete node [node_name]
+
+
+How to Join a new node to the k8s cluster?
+
+root@kubernetesmaster:~# kubeadm token create --print-join-command
+kubeadm join 192.168.0.50:6443 --token j4rqsy.413k5c4go1o04y69     --discovery-token-ca-cert-hash sha256:35c5f6a92ae5fa3077ad60a8fda8483ad653a27fbf32e5ede7fa38df97291c2d
+root@kubernetesmaster:~#
+
+
+1)Generate token
+kubeadm token generate
+
+2)List the tokens
+kubeadm token list
+
+3)Print the command to join the nodes to k8s cluster
+kubeadm token create [token_name] --ttl 2h --print-join-command

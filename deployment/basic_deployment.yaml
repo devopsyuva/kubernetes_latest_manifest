@@ -1,0 +1,175 @@
+#Also a Stateless Application using deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2 #1.16.1
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      volumes:
+      - name: shared-date-logs  # Creating a shared volume for my containers
+        emptyDir: {}
+      containers:
+      - name: container-writing-dates # Name of first container
+        image: alpine # Image to use for first container
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"] # writing date every 10secs
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /var/log # Mounting log dir so app can write to it.
+      - name: container-serving-dates # Name of second container
+        image: nginx:1.19.0 # Image for second container
+        ports:
+        - containerPort: 80 # Defining what port to use.
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /usr/share/nginx/html # Where nginx will serve the written file
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      volumes:
+      - name: html  # Creating a shared volume for my containers
+        emptyDir: {}
+      containers:
+      - name: 1st
+        image: nginx
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+        ports:
+        - name: http
+          hostPort: 8090
+          containerPort: 80
+      - name: 2nd
+        image: debian
+        volumeMounts:
+        - name: html
+          mountPath: /html
+          command: ["/bin/sh", "-c"]
+          args:
+            - while true; do
+                date >> /html/index.html;
+                sleep 5;
+              done
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+    type: DirectoryOrCreate #If nothing exists at the given path, an empty directory will be created there as needed with permission set to 0755, having the same group and ownership with Kubelet.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: mysql
+  clusterIP: None
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_HOST
+          value: '%'
+          # Use secret in real usage
+        - name: MYSQL_ROOT_PASSWORD
+          value: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim

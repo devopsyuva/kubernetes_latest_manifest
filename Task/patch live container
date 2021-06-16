@@ -1,0 +1,17 @@
+Deploy nginx with some less version <1.9.1(1.7.9) and check the POD is running
+successfully
+
+Now apply the patch to upgrade the nginx image to 1.9.1
+wget https://raw.githubusercontent.com/linuxacademy/content-kubernetes-security-ac/master/nginx-patch-191.yaml
+==
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.9.1
+==
+
+kubectl patch deployment nginx-deployment --patch "$(cat nginx-patch-191.yaml)"
+kubectl get deployment nginx-deployment --output yaml
+kubectl get pods -o wide

@@ -1,0 +1,26 @@
+#This Pod will be allocated to specific node mentioned in nodeSelector
+#First assign the label to the node which you want to use
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+  labels:
+    app: sample-container
+spec:
+  nodeSelector:
+    disktype: ssd
+  containers:
+    - name: first-container
+      image: nginx
+---
+#Launch the POD on specific node using nodename parameter
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  nodeName: workernodeone # schedule pod to specific node
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: Always

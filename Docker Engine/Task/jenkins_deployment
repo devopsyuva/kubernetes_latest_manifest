@@ -1,0 +1,99 @@
+docker container run -d -ti --name jenkins-master --hostname jenkinsmaster -v /var/run/docker.sock:/var/run/docker.sock -v jenkins_home:/var/jenkins_home -p 8081:8080 jenkins/jenkins:lts
+
+Note:
+
+/var/run/docker.sock:/var/run/docker.sock is optional, Need to pass only if u want to manage docker plugin.
+
+Custom opetion for jenkins:
+===========================
+
+How to add custom executors?
+
+executors.groovy
+
+++
+import jenkins.model.*
+Jenkins.instance.setNumExecutors(5)
+++
+
+Now build image with our custom values:
+
+FROM jenkins/jenkins:lts
+COPY executors.groovy /usr/share/jenkins/ref/init.groovy.d/executors.groovy
+
+
+How to add custom plugins?
+
+update/create plugins.txt with list to plugins that you want to install
+
+++
+docker
+kubernetes
+++
+
+or
+
+++
+cucumber-testresult-plugin:0.8.2
+pam-auth:1.1
+matrix-project:1.4.1
+script-security:1.13
+++
+
+Inorder to see list of plugins in existing server:
+
+JENKINS_HOST=username:password@myhost.com:port
+curl -sSL "http://$JENKINS_HOST/pluginManager/api/xml?depth=1&xpath=/*/*/shortName|/*/*/version&wrapper=plugins" | perl -pe 's/.*?<shortName>([\w-]+).*?<version>([^<]+)()(<\/\w+>)+/\1 \2\n/g'|sed 's/ /:/'
+
+FROM jenkins/jenkins:lts
+COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
+
+or
+
+FROM jenkins/jenkins:lts
+RUN /usr/local/bin/install-plugins.sh docker kubernetes greenballs ansicolor
+
+
+How to run jenkins with custom ports?
+
+FROM jenkins/jenkins:lts
+ENV JENKINS_SLAVE_AGENT_PORT 50001
+COPY https.pem /var/lib/jenkins/cert
+COPY https.key /var/lib/jenkins/pk
+ENV JENKINS_OPTS --httpPort=-1 --httpsPort=8083 --httpsCertificate=/var/lib/jenkins/cert --httpsPrivateKey=/var/lib/jenkins/pk
+EXPOSE 8083
+
+or
+
+docker container run -d --name jenkins-master -p 8090:8080 -p 50001:50001 --env JENKINS_SLAVE_AGENT_PORT=50001 -env JAVA_OPTS=-Djenkins.install.runSetupWizard=false jenkins/jenkins:lts
+
+
+How to install some tools/packages for jenkins image?
+
+FROM jenkins/jenkins:lts
+# if we want to install via apt change the user to root from jenkins default
+USER root
+RUN apt-get update && apt-get install -y iproute2 inetping-utils
+# drop back to the regular jenkins user - good practice
+USER jenkins
+
+
+
+Note:
+
+REF: directory with preinstalled plugins. Default value: /usr/share/jenkins/ref/plugins
+JENKINS_WAR: full path to the jenkins.war. Default value: /usr/share/jenkins/jenkins.war
+
+
+How to update custom password in config.xml file using apache2-utils packages?
+
+Install package to execute below command --> apt install apache2-utis
+
+root@localaquaserver:~# htpasswd -nbBC 10 admin test123
+admin:$2y$10$L76tVpxoxtB.TKB470PmzeFLFivZI8BdRyFv9qMgK9t5dxElnscF6
+
+root@localaquaserver:~#
+
+Reference: https://github.com/jenkinsci/docker/blob/master/README.md
+

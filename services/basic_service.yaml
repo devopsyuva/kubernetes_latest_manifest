@@ -1,0 +1,121 @@
+#by Default this service will pick ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP    #type not needed to pass when ClusterIP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 80
+---
+#by Default this service will pick ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: temp-nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      volumes:
+      - name: shared-date-logs  # Creating a shared volume for my containers
+        emptyDir: {}
+      containers:
+      - name: container-writing-dates # Name of first container
+        image: alpine # Image to use for first container
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"] # writing date every 10secs
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /var/log # Mounting log dir so app can write to it.
+      - name: container-serving-dates # Name of second container
+        image: nginx:1.19.0 # Image for second container
+        ports:
+        - containerPort: 80 # Defining what port to use.
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /usr/share/nginx/html # Where nginx will serve the written file
+---
+#by Default this service will pick ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: temp-nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      volumes:
+      - name: www
+        downwardAPI:
+          items:
+            - path: "index.html"
+              fieldRef:
+                fieldPath: metadata.name
+      containers:
+      - name: container-serving-dates # Name of second container
+        image: nginx:1.19.0 # Image for second container
+        ports:
+        - containerPort: 80 # Defining what port to use.
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html/index.html # Where nginx will serve the written file
+          subPath: index.html

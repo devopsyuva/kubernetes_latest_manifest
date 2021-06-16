@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  storageClassName: nfs-manual
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem #Block
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  nfs:
+    path: /var/backup
+    server: 192.168.1.120
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc
+spec:
+  storageClassName: nfs-manual
+  accessModes:
+  - ReadWriteMany
+  resources:
+     requests:
+       storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-nginx-nfs-pod
+  labels:
+    name: hello-nginx-nfs-pod
+spec:
+  containers:
+    - name: hello-nginx-nfs-pod
+      image: nginx
+      ports:
+        - name: web
+          containerPort: 80
+      volumeMounts:
+        - name: nfsvol
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: nfsvol
+      persistentVolumeClaim:
+        claimName: nfs-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      volumes:
+        - name: task-nfs-storage
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+      containers:
+      - name: nginx
+        image: nginx:1.14.2 #1.16.1    jenkins/jenkins:lts
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - mountPath: "/usr/share/nginx/html"  #/var/jenkins_home
+            name: task-nfs-storage

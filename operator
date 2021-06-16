@@ -1,0 +1,21 @@
+https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#operators-in-kubernetes
+
+https://github.com/operator-framework/getting-started
+
+https://operatorhub.io/getting-started
+
+OpenSDK Operator:
+
+https://sdk.operatorframework.io/docs/
+
+Go
+
+https://sdk.operatorframework.io/docs/golang/quickstart/
+
+Ansible
+
+https://sdk.operatorframework.io/docs/ansible/quickstart/
+
+Helm
+
+https://sdk.operatorframework.io/docs/helm/quickstart/

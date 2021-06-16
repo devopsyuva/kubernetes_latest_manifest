@@ -1,0 +1,74 @@
+Install helm:
+=============
+
+Install through binary release:
+
+Download the package with specific version
+root@kubernetesmanager:~#wget https://github.com/helm/helm/releases
+
+Now untar and place helm binary in executable path as below
+root@kubernetesmanager:~#tar -zxvf helm-v3.2.1-linux-amd64.tar.gz
+root@kubernetesmanager:~#mv linux-amd64/helm /usr/local/bin/helm
+
+Install helm v3 using script as mentioned below:
+
+root@kubernetesmanager:~# curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+root@kubernetesmanager:~# chmod 700 get_helm.sh
+root@kubernetesmanager:~# ./get_helm.sh
+Downloading https://get.helm.sh/helm-v3.2.1-linux-amd64.tar.gz
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
+
+Version Installation:
+
+root@kubernetesmanager:~# helm version
+version.BuildInfo{Version:"v3.2.1", GitCommit:"fe51cd1e31e6a202cba7dead9552a6d418ded79a", GitTreeState:"clean", GoVersion:"go1.13.10"}
+root@kubernetesmanager:~#
+
+
+Helm inbuild environment variables:
+
+| Name                               | Description                                                                       |
+|------------------------------------|-----------------------------------------------------------------------------------|
+| $XDG_CACHE_HOME                    | set an alternative location for storing cached files.                             |
+| $XDG_CONFIG_HOME                   | set an alternative location for storing Helm configuration.                       |
+| $XDG_DATA_HOME                     | set an alternative location for storing Helm data.                                |
+| $HELM_DRIVER                       | set the backend storage driver. Values are: configmap, secret, memory, postgres   |
+| $HELM_DRIVER_SQL_CONNECTION_STRING | set the connection string the SQL storage driver should use.                      |
+| $HELM_NO_PLUGINS                   | disable plugins. Set HELM_NO_PLUGINS=1 to disable plugins.                        |
+| $KUBECONFIG                        | set an alternative Kubernetes configuration file (default "~/.kube/config")       |
+
+
+By default, the default directories depend on the Operating System. The defaults are listed below:
+
+| Operating System | Cache Path                | Configuration Path             | Data Path               |
+|------------------|---------------------------|--------------------------------|-------------------------|
+| Linux            | $HOME/.cache/helm         | $HOME/.config/helm             | $HOME/.local/share/helm |
+| macOS            | $HOME/Library/Caches/helm | $HOME/Library/Preferences/helm | $HOME/Library/helm      |
+| Windows          | %TEMP%\helm               | %APPDATA%\helm                 | %APPDATA%\helm          |
+
+
+Initial setup:
+==============
+
+After helm was install we need to point helm to stable repo which is called as charts repository, in older version v2 it was done as part of helm installation.
+
+root@kubernetesmanager:~# helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+"stable" has been added to your repositories
+root@kubernetesmanager:~# helm repo list
+NAME  	URL                                              
+stable	https://kubernetes-charts.storage.googleapis.com/
+root@kubernetesmanager:~#
+
+Note: Similar way we can add multiple chart repos for helm to install applications
+
+Helm has its own repo which doesn't need to point or update as repo like stable, by default it can communicate to hub (helm hub)
+
+
+It was always recommended to run #helm repo update command to check for latest charts in the repo
+
+root@kubernetesmanager:~# helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "stable" chart repository
+Update Complete. ⎈ Happy Helming!⎈ 
+root@kubernetesmanager:~#

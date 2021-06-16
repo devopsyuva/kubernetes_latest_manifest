@@ -1,0 +1,50 @@
+JSON --> Java Script Object Notation
+
+It is used to store the information of different things which are needed to use later which is reprsented with key value pairs.
+
+JSON file extention will be ended with .json
+
+sudheer_test.json
+
+JSON file context always represented in {} braces
+
+name[1]
+age
+
+{
+	"name": ["sudhams reddy duba", "k8s course", "docker syllabus"]
+	"age": 31,
+	"salary": 31000.90,
+	"fav_num": 1e+20,
+	"male": true,
+	"flaws": null
+}
+
+{{ employee.name.hobbies }}
+
+{
+	"employee": {
+	  "name": "sudhams reddy duba",
+	    "age": 31,
+	    "salary": 31000.90,
+	    "fav_num": 1e+20,
+	    "male": true,
+	    "flaws": null,
+	    "hobbies": ["playing", "movies"],
+	    "friends": [
+          {
+            "name": "krishna teja",
+            "age": 32
+          },
+          {
+            "name": "sudhams duba",
+            "age": 20
+          },
+	    ]
+	  "name": "somu",
+	  "age": 29
+	}
+
+}
+
+{{ employee.friends[1].name }}

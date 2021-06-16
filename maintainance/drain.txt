@@ -1,0 +1,36 @@
+Drain:
+======
+
+You can use kubectl drain to safely evict all of your pods from a node before you perform maintenance 
+on the node (e.g. kernel upgrade, hardware maintenance, etc.). Safe evictions allow the pod’s containers 
+to gracefully terminate and will respect the PodDisruptionBudgets you have specified.
+
+
+Now to drain the node, execute below command:
+
+#kubernetes drain node <nodename>
+
+PDB (PodDistributionBudget):
+============================
+
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: zookeeper
+
+

@@ -1,0 +1,33 @@
+#We can also execute from CLI
+#kubectl run hello --schedule="*/1 * * * *" --restart=OnFailure --image=busybox -- /bin/sh -c "date; echo Hello from the Kubernetes cluster"
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  successfulJobsHistoryLimit: 1
+  schedule: "*/2 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
+
+we need to run backup on weekend at 3am
+
+0 3 * * 6,0
+
+5 columns
+
+1 column --> Minutes (0-59)
+2 column --> Hours  (0-23)
+3 cloumn --> Days of Month (1-31)
+4 colum --> Month  (1-12/Jan/Feb..Dec)
+5 column --> Week  (0-Sun --> 6 --> Sat)

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-not-ready
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-not-ready
+  template:
+    metadata:
+      labels:
+        app: nginx-not-ready
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+            httpHeaders:
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 3
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: nginx-not-ready

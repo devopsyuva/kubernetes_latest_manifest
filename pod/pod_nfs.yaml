@@ -1,0 +1,50 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nfs-in-a-pod
+spec:
+  containers:
+    - name: app
+      image: alpine
+      volumeMounts:
+        - name: nfs-volume
+          mountPath: /var/nfs # Please change the destination you like the share to be mounted too
+      command: ["/bin/sh"]
+      args: ["-c", "sleep 500000"]
+  volumes:
+    - name: nfs-volume
+      nfs:
+        server: 192.168.1.50 # Please change this to your NFS server
+        path: /data # Please change this to the relevant share
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container-pod # Name of our pod
+spec:
+  volumes:
+  - name: html  # Creating a shared volume for my containers
+    nfs:
+      server: 192.168.1.110 # Please change this to your NFS server
+      path: /baskups # Please change this to the relevant share
+  containers:
+  - name: 1st
+    image: nginx
+    volumeMounts:
+    - name: html
+      mountPath: /usr/share/nginx/html
+    ports:
+    - name: http
+      hostPort: 8090
+      containerPort: 80
+  - name: 2nd
+    image: debian
+    volumeMounts:
+    - name: html
+      mountPath: /html
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          date >> /html/index.html;
+          sleep 5;
+        done

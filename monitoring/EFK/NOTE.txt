@@ -1,0 +1,70 @@
+Elasticearch:
+=============
+
+Elasticsearch is a distributed, open source search and analytics engine for all types of data, including textual, numerical, geospatial, structured, and unstructured. Elasticsearch is built on Apache Lucene and was first released in 2010 by Elasticsearch N.V. (now known as Elastic). Known for its simple REST APIs, distributed nature, speed, and scalability, Elasticsearch is the central component of the Elastic Stack, a set of open source tools for data ingestion, enrichment, storage, analysis, and visualization. Commonly referred to as the ELK Stack (after Elasticsearch, Logstash, and Kibana), the Elastic Stack now includes a rich collection of lightweight shipping agents known as Beats for sending data to Elasticsearch.
+
+
+When it is used?
+The speed and scalability of Elasticsearch and its ability to index many types of content mean that it can be used for a number of use cases:
+
+Application search
+Website search
+Enterprise search
+Logging and log analytics
+Infrastructure metrics and container monitoring
+Application performance monitoring
+Geospatial data analysis and visualization
+Security analytics
+Business analytics
+
+How does Elasticsearch work?
+Raw data flows into Elasticsearch from a variety of sources, including logs, system metrics, and web applications. Data ingestion is the process by which this raw data is parsed, normalized, and enriched before it is indexed in Elasticsearch. Once indexed in Elasticsearch, users can run complex queries against their data and use aggregations to retrieve complex summaries of their data. From Kibana, users can create powerful visualizations of their data, share dashboards, and manage the Elastic Stack.
+
+What is an Elasticsearch index?
+An Elasticsearch index is a collection of documents that are related to each other. Elasticsearch stores data as JSON documents. Each document correlates a set of keys (names of fields or properties) with their corresponding values (strings, numbers, Booleans, dates, arrays of values, geolocations, or other types of data).
+
+Elasticsearch uses a data structure called an inverted index, which is designed to allow very fast full-text searches. An inverted index lists every unique word that appears in any document and identifies all of the documents each word occurs in.
+
+During the indexing process, Elasticsearch stores documents and builds an inverted index to make the document data searchable in near real-time. Indexing is initiated with the index API, through which you can add or update a JSON document in a specific index.
+
+
+Kibana:
+=======
+
+Kibana is an open source frontend application that sits on top of the Elastic Stack, providing search and data visualization capabilities for data indexed in Elasticsearch. Commonly known as the charting tool for the Elastic Stack (previously referred to as the ELK Stack after Elasticsearch, Logstash, and Kibana), Kibana also acts as the user interface for monitoring, managing, and securing an Elastic Stack cluster — as well as the centralized hub for built-in solutions developed on the Elastic Stack. Developed in 2013 from within the Elasticsearch community, Kibana has grown to become the window into the Elastic Stack itself, offering a portal for users and companies.
+
+
+
+What is Kibana used for?
+Kibana's tight integration with Elasticsearch and the larger Elastic Stack make it ideal for supporting the following:
+
+Searching, viewing, and visualizing data indexed in Elasticsearch and analyzing the data through the creation of bar charts, pie charts, tables, histograms, and maps. A dashboard view combines these visual elements to then be shared via browser to provide real-time analytical views into large data volumes in support of use cases such as:
+Logging and log analytics
+Infrastructure metrics and container monitoring
+Application performance monitoring (APM)
+Geospatial data analysis and visualization
+Security analytics
+Business analytics
+Monitoring, managing, and securing an Elastic Stack instance via web interface.
+Centralizing access for built-in solutions developed on the Elastic Stack for observability, security, and enterprise search applications.
+
+
+How does searching and visualizing data in Kibana work?
+Kibana enables the visual analysis of data from an Elasticsearch index or multiple indices. Indices are created when Logstash (a largescale ingestor) or Beats (a collection of single-purpose data shippers) ingests unstructured data from log files and other sources and converts it into a structured format for Elasticsearch storage and search functionalities.
+
+Kibana’s interface allows users to query data in Elasticsearch indices and then visualize the results through standard chart options or built-in apps like Lens, Canvas, and Maps. Users can choose between different chart types, change the aggregations of numbers, and filter to specific segments of data.
+
+
+How do I create dashboards in Kibana?
+To build a dashboard in Kibana, users must have data indexed in Elasticsearch and have already built a search, visualization, or map. From within Kibana, click Dashboard in the side navigation. When opening the Dashboard interface, an overview of existing dashboards is presented. If there are no dashboards, sample data sets can be added, which include pre-built dashboards.
+
+To build a dashboard, users can follow these steps:
+
+In the side navigation, click Dashboard.
+Click Create new dashboard.
+Click Add.
+Use Add Panels to add visualizations and saved searches to the dashboard. If there are a large number of visualizations, the lists can be filtered.
+If there is a read-only icon in the header, this indicates that a user does not have sufficient permissions to create, edit, or save dashboards. Kibana administrators can change these permission settings on an individual or group basis.
+
+
+

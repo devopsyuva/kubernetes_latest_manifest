@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-deployment
+  labels:
+    app: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:lts
+        ports:
+        - name: ui-port
+          containerPort: 8080
+          hostPath: 8092
+        - name: agent-port
+          containerPort: 50000
+        volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+      volumes:
+        - name: jenkins-home
+          hostPath:
+            path: /mnt/jenkins_home
+            type: DirectoryOrCreate
+---
+#For service with ClusterIP (default)
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-service
+spec:
+  ports:
+  - name: ui-port
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: jenkins
+---
+#For service with NodePort:
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-service
+spec:
+  type: NodePort
+  ports:
+  - name: ui-port
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: jenkins

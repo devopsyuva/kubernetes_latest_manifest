@@ -1,0 +1,262 @@
+On-disk files in a Container are ephemeral, which presents some problems for non-trivial applications when running in Containers. First, when a Container crashes, kubelet will restart it, but the files will be lost - the Container starts with a clean state. Second, when running Containers together in a Pod it is often necessary to share files between those Containers.
+
+AWS:
+===
+
+aws ec2 create-volume --availability-zone=eu-west-1a --size=10 --volume-type=gp2
+
+Note: Make sure the zone matches the zone you brought up your k8s cluster in AWS
+
+POD:
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-ebs
+spec:
+  containers:
+  - image: k8s.gcr.io/test-webserver
+    name: test-container
+    volumeMounts:
+    - mountPath: /test-ebs
+      name: test-volume
+  volumes:
+  - name: test-volume
+    # This AWS EBS volume must already exist.
+    awsElasticBlockStore:
+      volumeID: <volume-id>
+      fsType: ext4
+++
+
+
+GoogleCloud:
+============
+
+gcloud compute disks create --size=500GB --zone=us-central1-a my-data-disk
+
+
+POD:
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pd
+spec:
+  containers:
+  - image: k8s.gcr.io/test-webserver
+    name: test-container
+    volumeMounts:
+    - mountPath: /test-pd
+      name: test-volume
+  volumes:
+  - name: test-volume
+    # This GCE PD must already exist.
+    gcePersistentDisk:
+      pdName: my-data-disk
+      fsType: ext4
+++
+
+
+OpenStack:
+==========
+
+
+POD:
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-cinder
+spec:
+  containers:
+  - image: k8s.gcr.io/test-webserver
+    name: test-cinder-container
+    volumeMounts:
+    - mountPath: /test-cinder
+      name: test-volume
+  volumes:
+  - name: test-volume
+    # This OpenStack volume must already exist.
+    cinder:
+      volumeID: <volume-id>
+      fsType: ext4
+++
+
+Note: Kubernetes with OpenStack Cloud Provider configured. For cloudprovider configuration please refer cloud provider openstack.
+
+
+CephFS:
+=======
+
+POD (with secret):
+
+++
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ceph-secret
+data:
+  key: QVFCMTZWMVZvRjVtRXhBQTVrQ1FzN2JCajhWVUxSdzI2Qzg0SEE9PQ==
+++
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cephfs2
+spec:
+  containers:
+  - name: cephfs-rw
+    image: kubernetes/pause
+    volumeMounts:
+    - mountPath: "/mnt/cephfs"
+      name: cephfs
+  volumes:
+  - name: cephfs
+    cephfs:
+      monitors:
+      - 10.16.154.78:6789
+      - 10.16.154.82:6789
+      - 10.16.154.83:6789
+      user: admin
+      secretRef:
+        name: ceph-secret
+      readOnly: true
+++
+
+or
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cephfs
+spec:
+  containers:
+  - name: cephfs-rw
+    image: kubernetes/pause
+    volumeMounts:
+    - mountPath: "/mnt/cephfs"
+      name: cephfs
+  volumes:
+  - name: cephfs
+    cephfs:
+      monitors:
+      - 10.16.154.78:6789
+      - 10.16.154.82:6789
+      - 10.16.154.83:6789
+      # by default the path is /, but you can override and mount a specific path of the filesystem by using the path attribute
+      # path: /some/path/in/side/cephfs
+      user: admin
+      secretFile: "/etc/ceph/admin.secret"
+      readOnly: true
+++
+
+
+gitRepo:
+========
+
+POD:
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: server
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    volumeMounts:
+    - mountPath: /mypath
+      name: git-volume
+  volumes:
+  - name: git-volume
+    gitRepo:
+      repository: "git@somewhere:me/my-git-repository.git"
+      revision: "22f1d8406d464b0c0874075539c1f2e96c253775"
+++
+
+
+rbd:
+====
+
+POD(with secret):
+
+++
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ceph-secret
+type: "kubernetes.io/rbd"
+data:
+  key: QVFCMTZWMVZvRjVtRXhBQTVrQ1FzN2JCajhWVUxSdzI2Qzg0SEE9PQ==
+++
+
+grep key /etc/ceph/ceph.client.kube.keyring |awk '{printf "%s", $NF}'|base64
+QVFBTWdYaFZ3QkNlRGhBQTlubFBhRnlmVVNhdEdENGRyRldEdlE9PQ==
+
+
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rbd2
+spec:
+  containers:
+    - image: kubernetes/pause
+      name: rbd-rw
+      volumeMounts:
+      - name: rbdpd
+        mountPath: /mnt/rbd
+  volumes:
+    - name: rbdpd
+      rbd:
+        monitors:
+        - '10.16.154.78:6789'
+        - '10.16.154.82:6789'
+        - '10.16.154.83:6789'
+        pool: kube
+        image: foo
+        fsType: ext4
+        readOnly: true
+        user: admin
+        secretRef:
+          name: ceph-secret
+++
+
+
+or
+
+++
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rbd
+spec:
+  containers:
+    - image: kubernetes/pause
+      name: rbd-rw
+      volumeMounts:
+      - name: rbdpd
+        mountPath: /mnt/rbd
+  volumes:
+    - name: rbdpd
+      rbd:
+        monitors:
+        - '10.16.154.78:6789'
+        - '10.16.154.82:6789'
+        - '10.16.154.83:6789'
+        pool: kube
+        image: foo
+        fsType: ext4
+        readOnly: true
+        user: admin
+        keyring: /etc/ceph/keyring
+        imageformat: "2"
+        imagefeatures: "layering"
+++

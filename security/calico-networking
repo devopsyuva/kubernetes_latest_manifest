@@ -1,0 +1,100 @@
+How to assign specific IP address to POD (If we are using calico CNI)?
+
+Specify below parameter in annotation while creting POD: "cni.projectcalico.org/ipAddrs": "[\"192.168.0.1\"]"
+
+Restric a POD to use an IP address range from the pool specified: cni.projectcalico.org/ipv4pools: "[\"pool-1\", \"pool-2\"]"
+
+
+IP pool creation:
+
+cat > pool1.yaml <<EOF
+apiVersion: projectcalico.org/v3
+kind: IPPool
+metadata:
+  name: pool1
+spec:
+  cidr: 10.24.0.0/18
+# blockSize: 29
+  ipipMode: Never
+  natOutgoing: true
+  disabled: false
+  nodeSelector: all()
+EOF
+
+Inorder to execute calicoctl command, we need to install binary as mentioned below and set the proper datastore(kubernetes or etcd), Which we can see in file "/etc/cni/net.d/10-calico.conflist"
+
+++
+{
+  "name": "k8s-pod-network",
+  "cniVersion": "0.3.1",
+  "plugins": [
+    {
+      "type": "calico",
+      "log_level": "info",
+      "datastore_type": "kubernetes",
+      "nodename": "kubernetesmanager",
+      "mtu": 1440,
+      "ipam": {
+          "type": "calico-ipam"
+      },
+      "policy": {
+          "type": "k8s"
+      },
+      "kubernetes": {
+          "kubeconfig": "/etc/cni/net.d/calico-kubeconfig"
+      }
+    },
+    {
+      "type": "portmap",
+      "snat": true,
+      "capabilities": {"portMappings": true}
+    }
+  ]
+} 
+++
+
+curl -O -L  https://github.com/projectcalico/calicoctl/releases/download/v3.13.3/calicoctl
+chmod +x calicoctl
+mv calicoctl /usr/local/bin/calicoctl
+
+IF we are using datasource "kubernetes" for calico, execute below command for export variables:
+
+root@kubernetesmanager:~# export KUBECONFIG=~/.kube/config
+root@kubernetesmanager:~# export DATASTORE_TYPE=kubernetes
+
+root@kubernetesmanager:~# calicoctl create -f pool1.yaml 
+Successfully created 1 'IPPool' resource(s)
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# calicoctl get ippools
+NAME                  CIDR            SELECTOR   
+default-ipv4-ippool   10.244.0.0/16   all()      
+pool1                 10.32.0.0/18    all()      
+
+
+How to assign a pool to a namespace?
+
+Create a namespace or use an existing namespace:
+
+#kubectl create namespace external-ns
+
+Now add annotation to the namespace create above:
+
+#kubectl annotate namespace external-ns "cni.projectcalico.org/ipv4pools"=‘[“external-pool"]’
+
+
+Pool will be applied at per-namespace, per-node and per-pod
+
+Note:
+1)The address must be within a configured Calico IP pool and not currently in use. The annotation must be present when the pod is created; adding it later has no effect.
+2)currently only a single IP address is supported per-pod using this annotation
+
+
+Reference: 
+https://docs.projectcalico.org/reference/resources/ippool
+https://docs.projectcalico.org/getting-started/kubernetes/hardway/configure-ip-pools
+
+Overlay networking in Calico:
+https://docs.projectcalico.org/networking/vxlan-ipip
+
+http://info.tigera.io/rs/805-GFH-732/images/ProjectCalico-Datasheet.pdf

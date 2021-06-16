@@ -1,0 +1,50 @@
+How to keep Image small:
+========================
+Start with an appropriate base image. For instance, if you need a JDK, consider basing your image on the official openjdk image, rather than starting with a generic ubuntu image and installing openjdk as part of the Dockerfile.
+
+If you have multiple images with a lot in common, consider creating your own base image with the shared components, and basing your unique images on that. 
+
+If you need to use a version of Docker that does not include multistage builds, try to reduce the number of layers in your image by minimizing the number of separate RUN commands in your Dockerfile. You can do this by consolidating multiple commands into a single RUN line and using your shell’s mechanisms to combine them together.
+
+When building images, always tag them with useful tags which codify version information, intended destination (prod or test, for instance), stability, or other information that is useful when deploying the application in different environments. Do not rely on the automatically-created latest tag.
+
+How to manage application data:
+===============================
+Avoid storing application data in your container’s writable layer using storage drivers. This increases the size of your container and is less efficient from an I/O perspective than using volumes or bind mounts.
+
+Always prefer to store application data in volumes
+
+For production, use secrets to store sensitive application data used by services, and use configs for non-sensitive data such as configuration files. If you currently use standalone containers, consider migrating to use single-replica services, so that you can take advantage of these service-only features.
+
+++
+docker build -t myimage:latest -<<EOF
+FROM busybox
+RUN echo "hello world"
+EOF
+==
+docker build -t myimage:latest -f- . <<EOF
+FROM busybox
+COPY somefile.txt .
+RUN cat /somefile.txt
+EOF
+==
+docker build -t myimage:latest -f- . <<EOF
+FROM busybox
+COPY somefile.txt .
+RUN cat /somefile.txt
+EOF
+==
+docker build -t myimage:latest -f- https://github.com/docker-library/hello-world.git <<EOF
+FROM busybox
+COPY hello.c .
+EOF
+++
+
+Reference: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+
+Logging:
+https://docs.docker.com/config/containers/logging/configure/
+https://docs.fluentd.org/v/0.12/container-deployment/kubernetes
+https://docs.fluentd.org/v/0.12/container-deployment/docker-logging-driver --> Fluentd
+https://docs.fluentd.org/v/0.12/articles/docker-logging-efk-compose
+

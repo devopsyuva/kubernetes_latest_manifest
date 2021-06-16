@@ -1,0 +1,18 @@
+Content Trust:
+
+docker container run --disable-content-trust=false nginx
+
+
+https://docs.docker.com/samples/
+
+Security:
+=========
+https://github.com/docker/labs/tree/master/security/README.md
+
+
+
+root@ubuntuserver:~# docker container run -dit --name apparmor2 --security-opt apparmor=unconfined alpine sh
+
+Apparmor profiles:
+==================
+https://github.com/docker/labs/blob/master/security/apparmor/README.md

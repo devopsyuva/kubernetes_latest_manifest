@@ -1,0 +1,66 @@
+You add a taint to a node using kubectl taint. For example,
+
+taints will be applied to nodes and tolerations will be mentioned in POD yaml to match taint to scedule the POD
+
+
+types of effects:
+
+NoSchedule
+PreferNoSchedule
+NoExecute
+
+Syntax:
+
+kubectl taint nodes node1 key1=value1:NoSchedule
+kubectl taint nodes node1 key1=value1:NoExecute
+kubectl taint nodes node1 key2=value2:NoSchedule
+
+places a taint on node node1. The taint has key key, value value, and taint
+effect NoSchedule. This means that no pod will be able to schedule onto node1
+unless it has a matching toleration.
+
+There are some built-in taints for the nodes, where kubernetes will apply while depolying the cluster
+
+++
+node.kubernetes.io/not-ready: Node is not ready. This corresponds to the NodeCondition Ready being “False”.
+node.kubernetes.io/unreachable: Node is unreachable from the node controller. This corresponds to the NodeCondition Ready being “Unknown”.
+node.kubernetes.io/out-of-disk: Node becomes out of disk.
+node.kubernetes.io/memory-pressure: Node has memory pressure.
+node.kubernetes.io/disk-pressure: Node has disk pressure.
+node.kubernetes.io/network-unavailable: Node’s network is unavailable.
+node.kubernetes.io/unschedulable: Node is unschedulable.
+node.cloudprovider.kubernetes.io/uninitialized: When the kubelet is started with “external” cloud provider, this taint is set on a node to mark it as unusable. After a controller from the cloud-controller-manager initializes this node, the kubelet removes this taint.
+++
+
+To remove the taint added by the command above, you can run:
+
+kubectl taint nodes node1 key:NoSchedule-
+
+In-order to launch POD with the matched taint:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: "example-key"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+
+NoExecute example
+
+++
+tolerations:
+- key: "key1"
+  operator: "Equal"
+  value: "value1"
+  effect: "NoExecute"
+  tolerationSeconds: 3600
+++

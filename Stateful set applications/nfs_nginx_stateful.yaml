@@ -1,0 +1,161 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-data0
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Recycle
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: <NFS Server IP>
+    path: "/var/backup/data0"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-data1
+  labels:
+    type: local
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: manual
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: <NFS Server IP>
+    path: "/var/backup/data1"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-data2
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: <NFS Server IP>
+    path: "/var/backup/data2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"
+  #podManagementPolicy: Parallel #(default: Ordered)
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: nginx # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: manual
+      resources:
+        requests:
+          storage: 500Mi
+---
+root@kubernetesmanager:~# kubectl create -f statefulset_nfs.yaml 
+persistentvolume/pv-volume-data0 created
+persistentvolume/pv-volume-data1 created
+persistentvolume/pv-volume-data2 created
+service/nginx created
+statefulset.apps/web created
+root@kubernetesmanager:~# kubectl get all
+NAME        READY   STATUS              RESTARTS   AGE
+pod/web-0   0/1     ContainerCreating   0          4s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   15d
+service/nginx        ClusterIP   None         <none>        80/TCP    4s
+
+NAME                   READY   AGE
+statefulset.apps/web   0/3     4s
+root@kubernetesmanager:~# kubectl get pv,pvc
+NAME                               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM               STORAGECLASS   REASON   AGE
+persistentvolume/pv-volume-data0   500Mi      RWO            Retain           Bound       default/www-web-0   manual                  9s
+persistentvolume/pv-volume-data1   500Mi      RWO            Retain           Bound       default/www-web-1   manual                  9s
+persistentvolume/pv-volume-data2   500Mi      RWO            Retain           Available                       manual                  9s
+
+NAME                              STATUS   VOLUME            CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/www-web-0   Bound    pv-volume-data0   500Mi      RWO            manual         9s
+persistentvolumeclaim/www-web-1   Bound    pv-volume-data1   500Mi      RWO            manual         4s
+root@kubernetesmanager:~# kubectl get all
+NAME        READY   STATUS              RESTARTS   AGE
+pod/web-0   1/1     Running             0          14s
+pod/web-1   1/1     Running             0          9s
+pod/web-2   0/1     ContainerCreating   0          4s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   15d
+service/nginx        ClusterIP   None         <none>        80/TCP    14s
+
+NAME                   READY   AGE
+statefulset.apps/web   2/3     14s
+root@kubernetesmanager:~# kubectl get all
+NAME        READY   STATUS    RESTARTS   AGE
+pod/web-0   1/1     Running   0          27s
+pod/web-1   1/1     Running   0          22s
+pod/web-2   1/1     Running   0          17s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   15d
+service/nginx        ClusterIP   None         <none>        80/TCP    27s
+
+NAME                   READY   AGE
+statefulset.apps/web   3/3     27s
+root@kubernetesmanager:~# kubectl get pv,pvc
+NAME                               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM               STORAGECLASS   REASON   AGE
+persistentvolume/pv-volume-data0   500Mi      RWO            Retain           Bound    default/www-web-0   manual                  29s
+persistentvolume/pv-volume-data1   500Mi      RWO            Retain           Bound    default/www-web-1   manual                  29s
+persistentvolume/pv-volume-data2   500Mi      RWO            Retain           Bound    default/www-web-2   manual                  29s
+
+NAME                              STATUS   VOLUME            CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/www-web-0   Bound    pv-volume-data0   500Mi      RWO            manual         29s
+persistentvolumeclaim/www-web-1   Bound    pv-volume-data1   500Mi      RWO            manual         24s
+persistentvolumeclaim/www-web-2   Bound    pv-volume-data2   500Mi      RWO            manual         19s
+root@kubernetesmanager:~# 

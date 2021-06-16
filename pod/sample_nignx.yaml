@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+      name: http
+      protocol: TCP
+      hostPort: 8090
+  nodeName: workerone
+  nodeSelector:
+    test-server-node: enabled
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+    securityContext:
+      privileged: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginxone
+    image: nginx
+    imagePullPolicy: Always #IfNotPresent, Never
+    ports:
+    - containerPort: 80
+  - name: nginxtwo
+    image: nginx
+    imagePullPolicy: Always #IfNotPresent, Never
+    ports:
+      - containerPort: 80
+    volumeMounts:
+    - name: www-data
+      mountPath: /usr/share/nginx/html/index.html
+      subPath: index.html
+  volumes:
+        - name: www
+          downwardAPI:
+            items:
+              - path: "index.html"
+                fieldRef:
+                  fieldPath: metadata.name

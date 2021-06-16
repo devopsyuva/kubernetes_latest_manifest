@@ -1,0 +1,26 @@
+docker container run -d --name mysql-server -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_ROOT_HOST=% -v mysql_data:/var/lib/mysql -p 3306:3306 mariadb
+
+
+
+custom cnf files:
+
+Many configuration options can be passed as flags to mysqld. This will give you the flexibility to customize the container without needing a cnf file. For example, if you want to change the default encoding and collation for all tables to use UTF-8 (utf8mb4) just run the following:
+
+--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+
+Backup:
+
+docker exec mysql-server sh -c 'exec mysqldump --all-databases -uroot -p"$MYSQL_ROOT_PASSWORD"' > /some/path/on/your/host/all-databases.sql
+
+Restore:
+
+docker exec -i mysql-server sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /some/path/on/your/host/all-databases.sql
+
+Sample wordpress application deployment:
+
+#docker container run -d --name mysql-server -e MYSQL_ROOT_PASSWORD=test1234 -e MYSQL_ROOT_HOST=% -v mysql_data:/var/lib/mysql -p 3306:3306 mariadb
+
+#docker container run -d --restart=always -e WORDPRESS_DB_HOST=<DOCKER_HOST_IP>:3306 -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=test1234 -p8090:80 wordpress
+
+Reference: https://hub.docker.com/_/mariadb

@@ -1,0 +1,49 @@
+Custom column to list images:
+=============================
+docker images --format "table {{.ID}}\t{{.Repository}}\t{{.Tag}}"
+
+docker images --format "{{.ID}}: {{.Repository}}"
+
+docker images --filter "since=image3" or docker images --filter "before=image1"
+
+
+To list IP address of the containers:
+
+froot@dockerserver:~# for i in `docker ps -q`;do docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $i;done
+
+172.30.1.2
+root@dockerserver:~# 
+
+
+To list container name and IP address associated to it:
+
+root@dockerserver:~# for i in `docker ps -aq`;do docker inspect -f '{{.Name}} - {{.NetworkSettings.IPAddress }}' $i;done
+/cranky_ramanujan - 
+/hostnet1 - 
+/hostnet - 
+/mynetwork - 
+/dest - 172.30.1.2
+/epic_euclid - 
+root@dockerserver:~#
+
+root@test:~# docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ad409094e939
+10.244.0.2
+root@test:~# docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' c4c726bc847e
+172.17.0.2
+root@test:~#
+
+root@test:~# docker inspect --format='{{.Name}}' $(docker ps -q)
+/affectionate_franklin
+/upbeat_ganguly
+root@test:~#
+
+root@test:~# docker inspect --format='{{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -q)
+/affectionate_franklin 172.21.0.2
+/upbeat_ganguly 172.17.0.2
+root@test:~# 
+root@test:~# 
+root@test:~# 
+
+root@test:~# docker inspect --format='{{json .Config.Image}}'  191bcdab7bb9
+"ubuntu:18.04"
+root@test:~#

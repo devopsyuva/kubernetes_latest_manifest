@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: dbserver
+spec:
+  replicas: 3 #It tells how PODs to be created to maintain HA
+  selector:
+    matchLabels:
+      database: mysql
+  template:
+    metadata:
+      name: db
+      labels:
+        database: mysql
+    spec:
+      containers:
+      - name: db-server
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: test123
+          - name: MYSQL_ROOT_HOST
+            value: '%'
+        volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: db-data
+      volumes:
+        - name: db-data
+          nfs:
+            server: 192.168.0.60
+            path: /var/nfs

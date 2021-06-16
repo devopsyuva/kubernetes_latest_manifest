@@ -1,0 +1,80 @@
+Tested in v1.10 --> https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal
+
+1) Lets create namespace and serviceaccount for nginx-ingress:
+#kubectl apply -f ns-and-sa.yaml
+
+2)Now create a secret with TLS certificate and key for default server in nginx
+#kubectl apply -f default-server-secret.yaml
+
+3)Create nginx config for customizing the nginx configuration
+#kubectl create -f nginx-configmap.yaml
+
+4)Create crd and RBAC for the cluster with proper clusterrole and clusterrolebinding with serviceaccount attached:
+#kubectl create -f customresource.yaml
+#kubectl create -f nginx-rbac.yaml
+
+5)Now lets deploy the nginx-ingress-controller, we have two ways to follow.
+But in this demo, we are using daemonset:
+For daemonset
+#kubectl create -f nginx-ingress-daemonset.yaml
+
+For deployment
+#kubectl create -f nginx-ingress-deployment.yaml
+
+Note: here we are using nginx ingress controller, for nginx+ deployment.
+Please refer the doc: https://github.com/nginxinc/kubernetes-ingress/blob/master/docs/installation.md
+
+6)Expose the nginx-ingress-controller as service with NodePort enabled:
+#kubectl create -f nginx-service.yaml
+
+7)verify the deployed components with help of below command, everything should
+be running successfully. if not, check the reason of the issue and do the
+necessary changes
+#kubectl get all -n nginx-ingress
+
+So till here we have completed the setup of ingress-controller with nginx.
+Now lets deploy some sample applications to check the ingress functionality
+
+8)deploy the nginx pods as deployment object and expose the service with ClusterIP
+
+Deployment
+#kubectl create -f test-apps.yaml
+
+Service for app:
+#kubectl expose deploy nginx-deploy-main --port=80
+#kubectl expose deploy nginx-deploy-green --port=80
+#kubectl expose deploy nginx-deploy-blue --port=80
+or
+#kubectl create -f test-app-service.yaml
+
+9)Now lets add the rules for the above applications to the ingress-controller:
+#kubectl create -f test-app-ingress-rules.yaml
+
+#kubectl get all #check all the applications are running successfully
+
+10)Add the worker node ip to the /etc/hosts file so that we can access in the
+browser as we have not registered the domains globally
+++
+nginx.example.com
+green.nginx.example.com
+blue.nginx.example.com
+++
+
+For example:
+
+192.168.0.21    nginx.example.com   green.nginx.example.com blue.nginx.example.com
+
+or
+
+curl 192.168.1.121 -H "host: onenginx.example.com"
+
+Alternative way to install nginx from different source:
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.35.0/deploy/static/provider/baremetal/deploy.yaml
+
+Reference: https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal
+
+Release version of nginx ingress controller:
+https://github.com/nginxinc/kubernetes-ingress/blob/master/docs/installation.md
+https://github.com/nginxinc/kubernetes-ingress/releases
+https://github.com/nginxinc/kubernetes-ingress/tree/release-1.8/deployments

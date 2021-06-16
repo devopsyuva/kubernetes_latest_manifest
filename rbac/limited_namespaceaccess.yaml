@@ -1,0 +1,28 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1 #rbac.authorization.k8s.io/v1beta1
+metadata:
+  namespace: sudheer
+  name: deployment-manager
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"] # You can also use ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1 #rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: deployment-manager-binding
+  namespace: sudheer
+subjects:
+- kind: User     #Group, ServiceAccount
+  name: employee
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: deployment-manager
+  apiGroup: ""
+---
+#Now lets test the RBAC is applied for the user in visualpath namespace by creating the deployment.
+#kubectl --context=employee-context run --image=nginx nginx
+#kubectl --context=employee-context get pods
+#kubectl --context=employee-context get pods --namespace=default

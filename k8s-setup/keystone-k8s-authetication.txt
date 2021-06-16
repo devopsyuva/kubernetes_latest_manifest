@@ -1,0 +1,162 @@
+https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/using-keystone-webhook-authenticator-and-authorizer.md
+
+https://github.com/kubernetes/cloud-provider-openstack/tree/master/examples/webhook
+
+
+root@containerdmanager:~# cat openstack-keystone/*
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-auth-policy
+  namespace: kube-system
+data:
+  policies: |
+    [
+      {
+        "users": {
+          "projects": ["admin"],
+          "roles": ["admin"]
+        },
+        "resource_permissions": {
+          "*/pods": ["get", "list", "watch"]
+        }
+      }
+    ]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-keystone-auth
+  namespace: kube-system
+  labels:
+    app: k8s-keystone-auth
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: k8s-keystone-auth
+  template:
+    metadata:
+      labels:
+        app: k8s-keystone-auth
+    spec:
+      serviceAccountName: k8s-keystone
+      containers:
+        - name: k8s-keystone-auth
+          image: k8scloudprovider/k8s-keystone-auth:latest
+          args:
+            - ./bin/k8s-keystone-auth
+            - --tls-cert-file
+            - /etc/pki/tls.crt
+            - --tls-private-key-file
+            - /etc/pki/tls.key
+            - --policy-configmap-name
+            - k8s-auth-policy
+            - --keystone-url
+            - http://192.168.1.130:5000/v3
+          volumeMounts:
+            - mountPath: /etc/pki
+              name: certs
+              readOnly: true
+          ports:
+            - containerPort: 8443
+      volumes:
+      - name: certs
+        secret:
+          secretName: keystone-auth-certs
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    k8s-app: k8s-keystone-auth
+  name: k8s-keystone-auth
+rules:
+  # Allow k8s-keystone-auth to get k8s-auth-policy configmap
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-keystone-auth
+  labels:
+    k8s-app: k8s-keystone-auth
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-keystone-auth
+subjects:
+- kind: ServiceAccount
+  name: k8s-keystone
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-keystone
+  namespace: kube-system
+kind: Service
+apiVersion: v1
+metadata:
+  name: k8s-keystone-auth-service
+  namespace: kube-system
+spec:
+  selector:
+    app: k8s-keystone-auth
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+root@containerdmanager:~#
+
+
+
+sed -i '/image:/ i \ \ \ \ - --authentication-token-webhook-config-file=/etc/kubernetes/pki/webhookconfig.yaml' /etc/kubernetes/manifests/kube-apiserver.yaml
+sed -i '/image:/ i \ \ \ \ - --authorization-webhook-config-file=/etc/kubernetes/pki/webhookconfig.yaml' /etc/kubernetes/manifests/kube-apiserver.yaml
+sed -i "/authorization-mode/c \ \ \ \ - --authorization-mode=Node,Webhook,RBAC" /etc/kubernetes/manifests/kube-apiserver.yaml
+
+root@containerdmanager:~# cat .kube/config 
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN5RENDQWJDZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJd01EZ3dPREUwTkRJd05Gb1hEVE13TURnd05qRTBOREl3TkZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBUFdRCnFqaiszVmFXNWtUa0FPMVVUNHRjSlg1ellRbWZ6bW1FMFpzcGVlQkhiYmdRNkJhLzFBdDdPSDljY2FYampycDAKanpWR1ZKNGc2RC95QlZMaXBhV3N0L2hqdGxTdTBrb0U5Tk9tZGw4TkFpTVc5Wk5wRURNaDFrVmt3NlVLNVY5dgpvK0EwVVVxTVdkZTM2ZkxtV1dWQjlKQ2c5QTU5YTFZMDJjdVNUTzIyOG9uWnlZamRKQ2NPUk5tSW4vTEVQVEROClFoeFpwb3hla2wraVhZZU1RdlM4dFcyR1pybGFPMmdhRkNFME9pQnArVHd2YjNsNWR5L3E5WVBYTkl4Tm9xaHcKSVdmZEhXV3pDMkprcmc4OTlzNDg3dkdBN2pwd1A0TUYxamlUTk5yejh3QmxGck9TNTJuRExkNWdGZXF4ajJ5eApmczZPZ3ZIVm9YWW1jQnpJTnpjQ0F3RUFBYU1qTUNFd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFHSExjUlVHMFZPcDhoekNUdzVXTFF0NXhEWncKV3dBaFkzYmE4M2orZy9RTDIwN3BVbUJrWTAzVlVKOWVFUk5USXdDL1V3b29hMEJIYUJ5VnhUQzJHeUpDdWpQTgo1dHcrM1B5RjRQeFU5dnYvS3FQcWNlZS9QbFNpd3owUUZpOGNvcE1sRDJsSjNjbTNTakl3NUl0VmlHUXN0YTBwCmZXZ0F5ZGdDM1gxV2RpRVNiVnA4WlV2Zm5PYVIwTmZCU1QrbUlydENFVlBYK2FPTDFRMUxpVExkc3ZQcDZabmoKMnRsTjgycGpIL3ZQdlhGam56YXgrZlpnWGdaUVJ2VFNOTDFYcWl0N3k0eU9XanhldUdIcVhET0IrVDNGNmMvLwpUcmZkQmhxdWFjVEFNZ01CS3FWazdBRmhxZ0dUcGk4RmJnNWE5SEFIZTR4dW9mS2NrSDBtd2ZMdm5PWT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    server: https://192.168.1.120:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: kubernetes-admin
+  name: kubernetes-admin@kubernetes
+- context:
+    cluster: kubernetes
+    user: openstackuser
+  name: openstackuser@mycluster
+current-context: openstackuser@mycluster
+kind: Config
+preferences: {}
+users:
+- name: kubernetes-admin
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM4akNDQWRxZ0F3SUJBZ0lJVFo5aEk4bVNEcU13RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TURBNE1EZ3hORFF5TURSYUZ3MHlNVEE0TURneE5EUXlNRGhhTURReApGekFWQmdOVkJBb1REbk41YzNSbGJUcHRZWE4wWlhKek1Sa3dGd1lEVlFRREV4QnJkV0psY201bGRHVnpMV0ZrCmJXbHVNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQTJkOW0xUU00T3JsblQ1bysKRldDRXNUcjFaaUhkT3NXWUpsUjB1L2pwY21VSGlQYkV0cVdRN080N3JPRE1WVGRrZVpsQzY4NWdwa050WW42ZwpreTVjRzJEcHJuU1psU3grdTJwWldJMnM0N2ZiaXVFck5WQUxhSGswdHJGajczcGcyNlVDaklKYTVxaVpYWUxyClJEUW42RE5CYis5d0tNT0RUYXVLM3BNdGVub2l4MXZZSll6NU1FNnZWSDFQc1RhTk1xQmpWTG9sU25IK1U0N0MKM0ZyZ21Mc3p6K3VmalRQTkZ6VlBzSmxKalJNcllubVJ6QThmTWJuOHVHd2sySWFwUVRpa2NYdUhXRGZScFQ3cwpQRXIvblByR2x0NEhobmNsVGZ4NlNBRjFiQmNHaVdINThrbWRrS2IyWDhFSEdHU2x0eWIwY2dMZGFSSjFMY2haClBHQ2Ntd0lEQVFBQm95Y3dKVEFPQmdOVkhROEJBZjhFQkFNQ0JhQXdFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUgKQXdJd0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFCR0NqbWdwOHQydHRMdnl2WVBPOXQyZTR4eENwTW5HUHduTApBVWE2RnFKOVRpbEkyYnY4SXhINUYxUnVBSDkvLzNBT2JzSkhMUXZWenJSK29hUmRhSkMvemZiUzB5ZlBNaGVxCnhqdEVlaTlYbGVMVFVlS2hib3ZKTUFhRXN3UWNOSG9rN0tQYXJIR0lMelk2WlhBMWVxMXhvcmRqSmhoTU9MSisKWlpqa0xVd2krQzV4WXoySFU5cGNqTmMyNldhQml1ZkJUYnJib1RVTmpoYWZNMmdiZUkvOHBXVXpPZ3RVWTBYZQpTbkhZMWRRSTZjWEN3ZHFuaktwQnFZTm5MalBJSTErbUY5TEdwcjhnL2hrdDEyQVR2T0tVczllOW51amJiaFFYClBCaXZNc1JXUGlOalJaLzlIcmhPd09uNWxBcnpiN1VONHIzc2swSW9VMHFPN1B2ZGt1cz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBMmQ5bTFRTTRPcmxuVDVvK0ZXQ0VzVHIxWmlIZE9zV1lKbFIwdS9qcGNtVUhpUGJFCnRxV1E3TzQ3ck9ETVZUZGtlWmxDNjg1Z3BrTnRZbjZna3k1Y0cyRHByblNabFN4K3UycFpXSTJzNDdmYml1RXIKTlZBTGFIazB0ckZqNzNwZzI2VUNqSUphNXFpWlhZTHJSRFFuNkROQmIrOXdLTU9EVGF1SzNwTXRlbm9peDF2WQpKWXo1TUU2dlZIMVBzVGFOTXFCalZMb2xTbkgrVTQ3QzNGcmdtTHN6eit1ZmpUUE5GelZQc0psSmpSTXJZbm1SCnpBOGZNYm44dUd3azJJYXBRVGlrY1h1SFdEZlJwVDdzUEVyL25QckdsdDRIaG5jbFRmeDZTQUYxYkJjR2lXSDUKOGttZGtLYjJYOEVIR0dTbHR5YjBjZ0xkYVJKMUxjaFpQR0NjbXdJREFRQUJBb0lCQUZFRjE0UVg4bTFFVGJzNApyU1hlQXZxMTVsVFkreURFSXRUK1Mzc3NFZ1RNdFlTbDRIbmNFSTFMK3oxTFRESFVxN1RjM2hvN1lZM3pQVmFICnFNZVRVZ1dNZ05xejJmbXoxbDEwSzAzWFFoaGRZM08rVVFjK2dUK1U4NW1OVnBEVWZmaXc0TVhJSkczcS9UM2QKVmdqRExLUVppNWhJL3ZqcDNJYWg2TDdsRk9DYW93NW00OHY4bGg4RzBvQklZRXR3d0ljMk1PcGgvU1J5NGFlOQpCOHlMMStqbVRDUjIzcEV1UC9USUlvdkpkUSsycGdwZGhEK2t3ajErSjd0Q3RHUG1tYjVhcXlUQXVlMFJpaUpFCkZUaU80dnlLcENUeUJlbTloVkRMbDAyWjRXMVRNZmJuaGQvU2ZiRFFDdk14MkxoY1RVNmFxSTBteWkwY3FFNmQKdG9reml3RUNnWUVBL0tFTUFOR0tHMHNwYWlCRE1OaEFYYTVxeXhxams3U1pNWVQrTFBMNUxyVGJLeTlWVGZNUQpKRlk4b2gwUnk4VTRoMk1XQXFzUzhVb0VBbEI3d1I5M0hJeDZaOG50OWF0MEk4WGJkMDBYdTdra3l0WXBzSnZDCldTaVVsWkptSzF0cnJpMGRrUXF2RVJMVTNVMFRZUG50VmNHcXV6YnpWaVV1cmFxVEpBZUZMbnNDZ1lFQTNNZWgKZERtL1hpd1ppQytkL0MvTDZ4MmZBby9hYUZlMHI4bnFOWmlCZENsak1lWkNWeEJITVRybU1zUVpYQ2Z5UnVGNgpnNXE4TmtqWXE0YzNCV20wUmx5M2Fpbk5YTUl5cG5yZFE4L0ZocE1RcS9oRW9lcTJVZVllL3Q5YmhTV3JwWkFPCmZ1MTdaa1BIZUhTNzVKMWlTWUFDcm9vdXdMNUsveENHeWltZUFHRUNnWUVBNzlUUU9XSzBFdzg2NVBaMTgwUUoKYnlacldpQVRGT0dKNGRvWkY0RWZrUGkvYlBNRnIvZkY1a2s4VE1iK0l3NDdpVVJISEFkZTkxVEdFNUJtdkVQcgo1MTF4dzJDUG1QL0pSVURNQmlsWkU2MUR3WkNwaVhHRmd2RWtoZzZ6RWd3N1lPS1J4Q1Y1WitNUjFIb2NvSjhFCmNycG1KRStabWJtNDQ4UWc1ajZCY0VzQ2dZQnRXY015R2RnYkFLUzB1MEQ0dzRPd3REOHB1YTVudCtrYW1GdVUKcURDV0pGbXBRVzdpU0lHNmRIM0g3ekRRWUVpenFzSlBwTGhMK3RDMlJJYVArOGI2Z3JtbHI0YXp4c3ZuZ1R0TwpkdjVTcFV6QW9Icjk1NDdlQ2FpWWZIQ01CaGg2TEZ2QnFrWlFaSW5MczZYTW1kY3dxR0tycUcxM3NjamJoSWYrCllaYU1nUUtCZ1FETURESzNHOEx3Z3RNMGdFRTlMWkxJempQV1U0a1dmSGVhQk9KOXBMVzY4TlNleEdqS1g1N2wKbTBYUmk2Ly9kYjdnUWk5M0ZPeTUvNlJkRUMrcHpyMzJjTU1zK0E3ekkwNVJSb3RjKys4UHA5bmdsb0NROTZFNwpHdkUremZCL0ZkUSszN3p0SmM5VnJzNnRLQ3hEY3BzeGNBK2lTSG9LeTljTEdTdi9NVWt5bGc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+- name: openstackuser
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - "--domain-name=default"
+      - "--keystone-url=http://192.168.1.130:5000/v3"
+      command: /snap/bin/client-keystone-auth
+      env:
+      - name: "OS_USERNAME"
+        value: "admin"
+      - name: "OS_PASSWORD"
+        value: "test123"
+      - name: "OS_PROJECT_NAME"
+        value: "admin"
+root@containerdmanager
+
+root@containerdmanager:~# kubectl create clusterrolebinding openstack-admin --clusterrole cluster-admin --user admin
+clusterrolebinding.rbac.authorization.k8s.io/openstack-admin created
+root@containerdmanager:~#
+

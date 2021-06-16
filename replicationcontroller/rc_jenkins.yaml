@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: jenkins
+spec:
+  replicas: 2 #It tells how PODs to be created to maintain HA
+  selector:
+    app: cicd
+  template:
+    metadata:
+      name: jenkins-cicd
+      labels:
+        app: cicd
+    spec:
+      containers:
+      - name: jenkins-server
+        image: jenkins/jenkins:lts
+        ports:
+        - containerPort: 8080
+          hostPort: 8091
+        volumeMounts:
+          - mountPath: /var/jenkins_home
+            name: jenkins-data
+      volumes:
+        - name: jenkins-data
+          nfs:
+            server: 10.128.0.63
+            path: /var/nfs

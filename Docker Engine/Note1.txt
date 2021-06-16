@@ -1,0 +1,214 @@
+Create systemd conf override file for Docker
+sudo mkdir /etc/systemd/system/docker.service.d
+sudo touch /etc/systemd/system/docker.service.d/docker.conf
+sudo vi /etc/systemd/system/docker.service.d/docker.conf
+Add these following line and save it
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
+EnvironmentFile=-/etc/default/docker
+Edit /etc/default/docker
+sudo vi /etc/default/docker
+Add the following line and save it. Replace localhost:5000 with your registry domain name and port
+
+DOCKER_OPTS="--insecure-registry localhost:5000"
+Restart docker daemon
+Reload overriden configuration and restart docker as follows
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+
+2)How do I change default docker0 subnet mask address, which is conflicting to my docker host machine?
+
+root@dockerserver:~# cat /etc/docker/daemon.json 
+{
+  "bip": "172.30.1.1/24",
+  "ipv6": false
+}
+root@dockerserver:~#
+
+Reference:
+
+Sample file for network "/etc/docker/daemon.json"
+
+{
+  "bip": "192.168.1.5/24",
+  "fixed-cidr": "192.168.1.5/25",
+  "fixed-cidr-v6": "2001:db8::/64",
+  "mtu": 1500,
+  "default-gateway": "10.20.1.1",
+  "default-gateway-v6": "2001:db8:abcd::89",
+  "dns": ["10.20.1.2","10.20.1.3"]
+}
+
+All options that can be passed in /etc/docker/daemon.json file:
+
+++
+{
+  "authorization-plugins": [],
+  "data-root": "",
+  "dns": [],
+  "dns-opts": [],
+  "dns-search": [],
+  "exec-opts": [],
+  "exec-root": "",
+  "experimental": false,
+  "features": {},
+  "storage-driver": "",
+  "storage-opts": [],
+  "labels": [],
+  "live-restore": true,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file":"5",
+    "labels": "somelabel",
+    "env": "os,customer"
+  },
+  "mtu": 0,
+  "pidfile": "",
+  "cluster-store": "",
+  "cluster-store-opts": {},
+  "cluster-advertise": "",
+  "max-concurrent-downloads": 3,
+  "max-concurrent-uploads": 5,
+  "default-shm-size": "64M",
+  "shutdown-timeout": 15,
+  "debug": true,
+  "hosts": [],
+  "log-level": "",
+  "tls": true,
+  "tlsverify": true,
+  "tlscacert": "",
+  "tlscert": "",
+  "tlskey": "",
+  "swarm-default-advertise-addr": "",
+  "api-cors-header": "",
+  "selinux-enabled": false,
+  "userns-remap": "",
+  "group": "",
+  "cgroup-parent": "",
+  "default-ulimits": {
+    "nofile": {
+      "Name": "nofile",
+      "Hard": 64000,
+      "Soft": 64000
+    }
+  },
+  "init": false,
+  "init-path": "/usr/libexec/docker-init",
+  "ipv6": false,
+  "iptables": false,
+  "ip-forward": false,
+  "ip-masq": false,
+  "userland-proxy": false,
+  "userland-proxy-path": "/usr/libexec/docker-proxy",
+  "ip": "0.0.0.0",
+  "bridge": "",
+  "bip": "",
+  "fixed-cidr": "",
+  "fixed-cidr-v6": "",
+  "default-gateway": "",
+  "default-gateway-v6": "",
+  "icc": false,
+  "raw-logs": false,
+  "allow-nondistributable-artifacts": [],
+  "registry-mirrors": [],
+  "seccomp-profile": "",
+  "insecure-registries": [],
+  "no-new-privileges": false,
+  "default-runtime": "runc",
+  "oom-score-adjust": -500,
+  "node-generic-resources": ["NVIDIA-GPU=UUID1", "NVIDIA-GPU=UUID2"],
+  "runtimes": {
+    "cc-runtime": {
+      "path": "/usr/bin/cc-runtime"
+    },
+    "custom": {
+      "path": "/usr/local/bin/my-runc-replacement",
+      "runtimeArgs": [
+        "--debug"
+      ]
+    }
+  },
+  "default-address-pools":[
+    {"base":"172.80.0.0/16","size":24},
+    {"base":"172.90.0.0/16","size":24}
+  ]
+}
+++
+
+
+How to change default bridge from docker0 to other bridge interface?
+
+1. Create a bridge interface. Command to run:
+ip link add name mybridge0 type bridge
+2. Assign IP address to newly created interface. Command to run:
+ip addr add 172.30.10.0/24 dev mybridge0
+3. Bring the mybridge0 interface online. Command to run:
+ip link set dev mybridge0 up
+4. To check the information about mybridge0 network interface. Command to run:
+ip addr show mybridge0
+5. Create daemon.json file in /etc/docker directory. (If not exists)
+6. If /etc/docker/daemon.json already exists then skip step5 and add the below json content to it.
+
+{
+  "bridge": "mybridge0"
+}
+
+7. Restart docker service. Command to run:
+systemctl restart docker
+8. Now, create a container using nginx image. Command to run:
+docker run -d --name nginx --rm -p 8081:80 nginx:1.19-alpine
+9. To verify whether the nginx container got the IP addr some mybridge0 interface. Run this command:
+docker container inspect --format '{{.NetworkSettings.IPAddress}}' nginx
+10. To verify whether the network interface prefix assign to nginx container mapped to mybridge0 interface. Commands to run:
+
+[root@vagrant-docker ~]# docker container inspect --format '{{.NetworkSettings.IPPrefixLen}}' nginx
+16
+[root@vagrant-docker ~]# ip a s | grep 16:
+16: veth4f51a84@if15: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master mybridge0 state UP group default
+
+
+++
+root@dockerserver:~# iptables -t nat -L
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination         
+DOCKER     all  --  anywhere             anywhere             ADDRTYPE match dst-type LOCAL
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+DOCKER     all  --  anywhere            !localhost/8          ADDRTYPE match dst-type LOCAL
+
+Chain POSTROUTING (policy ACCEPT)
+target     prot opt source               destination         
+MASQUERADE  all  --  172.30.10.0/24       anywhere            
+MASQUERADE  all  --  172.18.0.0/16        anywhere            
+MASQUERADE  all  --  192.168.56.0/24      anywhere            
+
+Chain DOCKER (2 references)
+target     prot opt source               destination         
+RETURN     all  --  anywhere             anywhere            
+RETURN     all  --  anywhere             anywhere            
+RETURN     all  --  anywhere             anywhere            
+root@dockerserver:~#
+++
+
+
+How to check network namespace of a container?
+
+pid=$(docker container inspect -f "{{.State.Pid}}" stupefied_galois)
+echo $pid
+ls -l /var/run
+mkdir -p /var/run/netns/
+ln -sfT /proc/$pid/ns/net /var/run/netns/5d49fe870a36
+ls -l /proc/$pid/ns/net
+ip netns exec 5d49fe870a36 ip a
+
+
+

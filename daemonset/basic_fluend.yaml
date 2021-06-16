@@ -1,0 +1,80 @@
+Docker containers in Kubernetes write logs to standard output (stdout) and standard (stderr) error streams.
+Docker redirects these streams to a logging driver configured in Kubernetes to write to a file in JSON format.
+Kubernetes then exposes log files to users via kubectl logs command. Users can also get logs from a previous 
+instantiation of a container setting the --previous flag of this command to true. That way they can get container
+logs if the container crashed and was restarted.
+
+
+Kubernetes architecture facilitates a number of ways to manage application logs. Several common approaches to consider are
+
+1) using a logging sidecar container running inside an app’s pod.
+2) using a node-level logging agent that runs on every node.
+3) push logs directly from within an application to some backend.
+
+Fluentd is a open source project under Cloud Native Computing Foundation (CNCF)
+Fluentd agent that take cares of log collection, parsing and distribution
+
+Fluentd was designed to handle heavy throughput — aggregating from multiple inputs, processing data and routing to different outputs.
+Fluent Bit is not as pluggable and flexible as Fluentd, which can be integrated with a much larger amount of input and output sources.
+
+The combination of Fluentd and Fluent Bit is becoming extremely popular in Kubernetes deployments because of the way they compliment each 
+other — Fluent Bit acting as a lightweight shipper collecting data from the different nodes in the cluster and forwarding the data to Fluentd 
+for aggregation, processing and routing to any of the supported output destinations.
+
+So to explain in a single word, fluentd is called as log forwarder and fluentbit as log aggregator.
+
+Default configurations are to:
+
+listen port 24224 for Fluentd forward protocol and fluent listen on 2020 port.
+store logs with tag docker.** into /fluentd/log/docker.*.log (and symlink docker.log)
+store all other logs into /fluentd/log/data.*.log (and symlink data.log)
+
+
+kubectl create clusterrolebinding fluentd --clusterrole=cluster-admin --user=system:serviceaccount:kube-system:default
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-elasticsearch
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd-elasticsearch
+        image: fluent/fluentd-kubernetes-daemonset:v1.9.2-debian-elasticsearch7-1.0
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+
+
+Reference: https://medium.com/kubernetes-tutorials/cluster-level-logging-in-kubernetes-with-fluentd-e59aa2b6093a

@@ -1,0 +1,46 @@
+Create a deployment with a label app: nginx
+
+#kubectl create deployment nginx --image=nginx
+
+Expose the deployment using service:
+
+#kubectl expose deployment nginx --port=80
+
+Ensure there was no issue with the deployment of nginx app
+
+NetworkPolicy:
+==============
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: access-nginx
+spec:
+  podSelector:
+    matchLabels:
+      app: nginx
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: "true"
+
+
+Testing POD:
+
+kubectl run --generator=run-pod/v1 busybox --rm -ti --image=busybox -- /bin/sh
+
+After login execute below command which should fail
+
+wget --spider --timeout=1 nginx
+
+Now, create a test pod with label that matches the ingress selector:
+
+kubectl run --generator=run-pod/v1 busybox --rm -ti --labels="access=true" --image=busybox -- /bin/sh
+
+After login it should be successful
+
+wget --spider --timeout=1 nginx
+
+
+Reference: https://docs.projectcalico.org/v3.9/getting-started/kubernetes/installation/flannel

@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: pi
+        image: perl
+        command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  backoffLimit: 2
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysqlbackup
+        image: mysql:5.6
+        args:
+        - /bin/sh
+        - -c
+        - mysqldump -hmysql.default -uroot -ptest123 --all-databases > /var/tmp/mysql_backup.sql
+        volumeMounts:
+          - name: dbbackup
+            mountPath: /var/tmp
+      volumes:
+        - name: dbbackup
+          nfs:
+            path: /var/backup
+            server: << NFS Server >>
+      restartPolicy: OnFailure

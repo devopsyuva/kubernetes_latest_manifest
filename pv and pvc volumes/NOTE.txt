@@ -1,0 +1,125 @@
+How to change default storage class?
+
+#kubectl get storageclass
+NAME                 PROVISIONER               AGE
+standard (default)   kubernetes.io/gce-pd      1d
+gold                 kubernetes.io/gce-pd      1d
+
+Now there are two approaches to change the default storage class, one through
+annotation and another way is patch.
+
+annotation:
+storageclass.kubernetes.io/is-default-class set to true
+
+Note: Any other value or absence of the annotation is interpreted as false
+
+patch:
+#kubectl patch storageclass <your-class-name> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+#kubectl patch storageclass <your-class-name> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+
+Note: If two or more of them are marked as default, a PersistentVolumeClaim
+without storageClassName explicitly specified cannot be created.
+
+How to change the reclaim policy of existing PV?
+
+Choose one of your PersistentVolumes and change its reclaim policy:
+#kubectl patch pv <your-pv-name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+
+Sample example for PVC:
+
+++
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myclaim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 8Gi
+  storageClassName: slow
+  selector:
+    matchLabels:
+      release: "stable"
+    matchExpressions:
+      - {key: environment, operator: In, values: [dev]}
+++
+
+NFS server configuration:
+
+Lets say my NFS server IP address: 192.168.0.50
+Client: 192.168.0.51
+
+Setup NFS server:
+#apt-get update
+#apt-get install -y nfs-kernel-server
+
+Lets create shared directory on NFS server to clients:
+#mkdir -p /var/nfs/data
+#chown nobody:nogroup /var/nfs/data
+
+Note: NFS will translate any root operations on the client to the nobody:nogroup
+credentials as a security measure. Therefore, we need to change the directory
+ownership to match those credentials.
+
+Now export created shared directory:
+#vi/nano /etc/exports
+add below entries based on your configuration
+++
+/var/nfs/data    192.168.0.51(rw,sync,no_subtree_check)
+/home       192.168.0.51(rw,sync,no_root_squash,no_subtree_check) --> optional
+++
+
+save and exit
+
+rw: This option gives the client computer both read and write access to the volume.
+sync: This option forces NFS to write changes to disk before replying. This
+results in a more stable and consistent environment since the reply reflects the
+actual state of the remote volume. However, it also reduces the speed of file operations.
+no_subtree_check: This option prevents subtree checking, which is a process
+where the host must check whether the file is actually still available in the
+exported tree for every request. This can cause many problems when a file is
+renamed while the client has it opened. In almost all cases, it is better to
+disable subtree checking.
+no_root_squash: By default, NFS translates requests from a root user remotely
+into a non-privileged user on the server. This was intended as security feature
+to prevent a root account on the client from using the file system of the host
+as root. no_root_squash disables this behavior for certain shares.
+
+Now restart nfs service as mentioned below:
+#systemctl restart nfs-kernel-server
+
+Setup on Client side:
+#apt update
+#apt-get install -y nfs-common
+
+Now create on directory to moun the NFS path or we can use /mnt directory to
+mount:
+#mkdir -p /nfs/general
+#mount 192.168.0.50:/var/nfs/data /nfs/general
+
+verify the mounted path to client with below command:
+#df -h
+
+Note: After next reboot mount path will be removed, so in-order to make it
+permanent add the mount entries of NFS server to the client server in fstab
+file.
+
+#vi /etc/fstab
+++
+192.168.0.50:/var/nfs/data    /nfs/general   nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+192.168.0.50:/home       /nfs/home      nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+++
+Save and exit
+
+TroubleShooting:
+================
+Disabling ID mapping on NFSv4
+
+On both the NFS client and server, run:
+
+# echo 'Y' > /sys/module/nfsd/parameters/nfs4_disable_idmapping
+
+Reference: https://docs.openshift.com/container-platform/3.6/install_config/persistent_storage/persistent_storage_nfs.html

@@ -1,0 +1,44 @@
+#This Daemonset will try to launch on the node whoes label is matching to "app: frontend-webserver"
+#Nodes which doesn't match with the label defined they are skipped from launching it
+apiVersion: apps/v1 #extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend-webserver
+  template:
+    metadata:
+      labels:
+        app: frontend-webserver
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+        - name: webserver
+          image: nginx:1.14.2
+          ports:
+          - containerPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: frontend
+spec:
+  updateStrategy: RollingUpdate
+    maxUnavailable: 1
+    minReadySeconds: 0
+  template:
+    metadata:
+      labels:
+        app: frontend-webserver
+    spec:
+      nodeSelector:
+        app: frontend-node
+      containers:
+        - name: webserver
+          image: nginx
+          ports:
+          - containerPort: 80

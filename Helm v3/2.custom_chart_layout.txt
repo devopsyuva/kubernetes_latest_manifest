@@ -1,0 +1,420 @@
+To create chart directory along with the common files and
+directories used in a chart.
+
+my-nginx/
+  Chart.yaml          # A YAML file containing information about the chart
+  LICENSE             # OPTIONAL: A plain text file containing the license for the chart
+  README.md           # OPTIONAL: A human-readable README file
+  values.yaml         # The default configuration values for this chart
+  values.schema.json  # OPTIONAL: A JSON Schema for imposing a structure on the values.yaml file
+  charts/             # A directory containing any charts upon which this chart depends.
+  crds/               # Custom Resource Definitions
+  templates/          # A directory of templates that, when combined with values,
+                      # will generate valid Kubernetes manifest files.
+  templates/NOTES.txt # OPTIONAL: A plain text file containing short usage notes
+
+
+For example:
+
+root@kubernetesmanager:~# helm create my-nginx
+Creating my-nginx
+root@kubernetesmanager:~# 
+
+root@kubernetesmanager:~# tree my-nginx/
+my-nginx/
+├── Chart.yaml    # Information about your chart
+├── .helmignore   # Contains patterns to ignore when packaging Helm charts.
+├── charts
+├── templates
+│   ├── NOTES.txt
+│   ├── _helpers.tpl
+│   ├── deployment.yaml
+│   ├── hpa.yaml
+│   ├── ingress.yaml
+│   ├── service.yaml
+│   ├── serviceaccount.yaml
+│   └── tests
+│       └── test-connection.yaml
+└── values.yaml   # The default values for your templates
+
+3 directories, 10 files
+root@kubernetesmanager:~#
+
+Above, some file we need to create/delete based on our requirement.
+
+
+Charts.yaml
+===========
+
+apiVersion: The chart API version (required) (v1 or v2)
+name: The name of the chart (required)
+version: A SemVer 2 version (required)
+kubeVersion: A SemVer range of compatible Kubernetes versions (optional) (>= 1.13.0 < 1.15.0)
+description: A single-sentence description of this project (optional)
+type: It is the type of chart (optional)
+keywords:
+  - A list of keywords about this project (optional)
+home: The URL of this projects home page (optional)
+sources:
+  - A list of URLs to source code for this project (optional)
+dependencies: # A list of the chart requirements (optional)
+  - name: The name of the chart (nginx)
+    version: The version of the chart ("1.2.3")
+    repository: The repository URL ("https://example.com/charts") or alias ("@repo-name")
+    condition: (optional) A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
+    tags: # (optional)
+      - Tags can be used to group charts for enabling/disabling together
+    enabled: (optional) Enabled bool determines if chart should be loaded
+    import-values: # (optional)
+      - ImportValues holds the mapping of source values to parent key to be imported. Each item can be a string or pair of child/parent sublist items.
+    alias: (optional) Alias usable alias to be used for the chart. Useful when you have to add the same chart multiple times
+maintainers: # (optional)
+  - name: The maintainers name (required for each maintainer)
+    email: The maintainers email (optional for each maintainer)
+    url: A URL for the maintainer (optional for each maintainer)
+icon: A URL to an SVG or PNG image to be used as an icon (optional).
+appVersion: The version of the app that this contains (optional). This needn't be SemVer.
+deprecated: Whether this chart is deprecated (optional, boolean)
+annotations:
+  example: A list of annotations keyed by name (optional).
+
+Note: when ever you specify dependency charts execute below command to download the charts under charts/ directory.
+
+#helm dependency update (helm dep up foochart)
+
+charts/
+  apache-1.2.3.tgz
+  mysql-3.2.1.tgz
+
+Instead of doing above, we can pull the dependency chart to the parent charts using #helm pull command, but we need to be in chart/ directory.
+
+The order of creating/deleting the kubernetes objects through #helm install/upgrade depends on the order specified in below link:
+Reference: https://github.com/helm/helm/blob/484d43913f97292648c867b56768775a55e4bba6/pkg/releaseutil/kind_sorter.go
+
+For example:
+============
+Suppose that a chart named "A" creates the following Kubernetes objects
+
+namespace "A-Namespace"
+statefulset "A-StatefulSet"
+service "A-Service"
+Furthermore, A is dependent on chart B that creates objects
+
+namespace "B-Namespace"
+replicaset "B-ReplicaSet"
+service "B-Service"
+After installation/upgrade of chart A a single Helm release is created/modified. The release will create/update all of the above Kubernetes objects in the following order:
+
+A-Namespace
+B-Namespace
+A-StatefulSet
+B-ReplicaSet
+A-Service
+B-Service
+
+
+
+Templates:
+==========
+
+kubernetes object creation templates will be placed under templates/ directory.
+
+Example:
+
+++
+root@kubernetesmanager:~/my-nginx# cat templates/deployment.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-nginx.fullname" . }}
+  labels:
+    {{- include "my-nginx.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "my-nginx.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "my-nginx.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "my-nginx.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+root@kubernetesmanager:~/my-nginx#
+
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: deis-database
+  namespace: deis
+  labels:
+    app.kubernetes.io/managed-by: deis
+spec:
+  replicas: 1
+  selector:
+    app.kubernetes.io/name: deis-database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: deis-database
+    spec:
+      serviceAccount: deis-database
+      containers:
+        - name: deis-database
+          image: {{ .Values.imageRegistry }}/postgres:{{ .Values.dockerTag }}
+          imagePullPolicy: {{ .Values.pullPolicy }}
+          ports:
+            - containerPort: 5432
+          env:
+            - name: DATABASE_STORAGE
+              value: {{ default "minio" .Values.storage }}
+++
+
+reference: https://golang.org/pkg/text/template/
+
+Pre-defined values for helm:
+============================
+Values that are supplied via a values.yaml file (or via the --set flag) are accessible from the .Values object in a template. But there are other pre-defined pieces of data you can access in your templates.
+
+++
+Release.Name: The name of the release (not the chart)
+Release.Namespace: The namespace the chart was released to.
+Release.Service: The service that conducted the release.
+Release.IsUpgrade: This is set to true if the current operation is an upgrade or rollback.
+Release.IsInstall: This is set to true if the current operation is an install.
+Chart: The contents of the Chart.yaml. Thus, the chart version is obtainable as Chart.Version and the maintainers are in Chart.Maintainers.
+Files: A map-like object containing all non-special files in the chart. This will not give you access to templates, but will give you access to additional files that are present (unless they are excluded using .helmignore). Files can be accessed using {{ index .Files "file.name" }} or using the {{ .Files.Get name }} function. You can also access the contents of the file as []byte using {{ .Files.GetBytes }}
+Capabilities: A map-like object that contains information about the versions of Kubernetes ({{ .Capabilities.KubeVersion }} and the supported Kubernetes API versions ({{ .Capabilities.APIVersions.Has "batch/v1" }})
+++
+
+Values:
+=======
+
+sample values.yaml file
+
+++
+root@kubernetesmanager:~/my-nginx# cat values.yaml 
+# Default values for my-nginx.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+++
+
+How to convert your custom chart directory into package?
+
+root@kubernetesmanager:~# ls -l
+total 4
+drwxr-xr-x 4 root root 4096 May 23 16:53 my-nginx
+root@kubernetesmanager:~# helm package my-nginx
+Successfully packaged chart and saved it to: /root/my-nginx-0.1.0.tgz
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# ls -l
+total 8
+drwxr-xr-x 4 root root 4096 May 23 16:53 my-nginx
+-rw-r--r-- 1 root root 3597 May 23 17:05 my-nginx-0.1.0.tgz
+root@kubernetesmanager:~#
+
+How to verify the syntax of charts developed?
+
+root@kubernetesmanager:~# helm lint my-nginx
+==> Linting my-nginx
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# helm lint my-nginx-0.1.0.tgz 
+==> Linting my-nginx-0.1.0.tgz
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+root@kubernetesmanager:~# 
+
+In index.yaml file containes package list of that repo as mentioned below:
+
+root@kubernetesmanager:~# helm repo list
+NAME    URL                                              
+stable  https://kubernetes-charts.storage.googleapis.com/
+bitnami https://charts.bitnami.com/bitnami               
+root@kubernetesmanager:~# 
+root@kubernetesmanager:~# ls -l .cache/helm/repository/
+total 12600
+-rw-r--r-- 1 root root     724 May 23 10:50 bitnami-charts.txt
+-rw-r--r-- 1 root root 4432026 May 23 10:50 bitnami-index.yaml
+-rw-r--r-- 1 root root    3299 May 23 10:48 nginx
+-rw-r--r-- 1 root root   14791 May 23 13:38 nginx-5.6.0.tgz
+-rw-r--r-- 1 root root    3370 May 23 10:42 stable-charts.txt
+-rw-r--r-- 1 root root 8435264 May 23 10:42 stable-index.yaml
+root@kubernetesmanager:~# less .cache/helm/repository/stable-index.yaml 
+root@kubernetesmanager:~# tail -n+2 .cache/helm/repository/stable-index.yaml
+entries:
+  acs-engine-autoscaler:
+  - apiVersion: v1
+    appVersion: 2.1.1
+    created: 2020-05-23T09:59:00.413884678Z
+    deprecated: true
+    description: DEPRECATED Scales worker nodes within agent pools
+    digest: 93f924d4498d588bcdda88c7401e27c6fa0f50ff0601e78885eca13eb683c1e2
+    home: https://github.com/wbuchwalter/Kubernetes-acs-engine-autoscaler
+    icon: https://github.com/kubernetes/kubernetes/blob/master/logo/logo.png
+    name: acs-engine-autoscaler
+    sources:
+    - https://github.com/wbuchwalter/Kubernetes-acs-engine-autoscaler
+    urls:
+    - https://kubernetes-charts.storage.googleapis.com/acs-engine-autoscaler-2.2.2.tgz
+    version: 2.2.2
+
+_helper.tpl: (A place to put template helpers that you can re-use throughout the chart)
+
+
+++
+{{/* vim: set filetype=mustache: */}}
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "mynginx.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "mynginx.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+...
+...
+++
+
+

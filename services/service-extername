@@ -1,0 +1,23 @@
+Services with type ExternalName work as other regular services, but when you want to access to that service name,
+instead of returning cluster-ip of this service, it returns CNAME record with value that mentioned in
+externalName: parameter of service.
+
+As example mentioned in Kubernetes Documentation:
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  type: ExternalName
+  externalName: dbserver.example.com
+  ports:
+  - name: pg
+      protocol: TCP
+      port: 80
+      targetPort: 80
+
+kubectl run --generator=run-pod/v1 --rm utils -it --image dubareddy/utils bash
+
+When you want to do curl -v http://my-service or curl -v http://my-service.default.svc.cluster.local
+according your namespace(in this example it is default), it will redirect you at the DNS level to http://my.database.example.com

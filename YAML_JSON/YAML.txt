@@ -1,0 +1,146 @@
+YAML Ain't Markup Language 
+
+YAML is a human-readable data-serialization language. It is commonly used for configuration files and in applications where data is being stored or transmitted.
+
+It is similar to JSON (Java Script Object Notation)
+
+key-value, list, map, multi-line, single-line, object, identation
+
+yaml files need to be create with the extention like .yaml or .yml
+
+comments:
+=========
+In YAML comments are represented with # (hash) at the starting of the line or where ever u eant to add a specific comment.
+
+
+Lets create file with extention like sudheer.yaml or sudheer.yml
+
+
+sudheer.yaml/yml
++++
+#key value variables
+
+name: "sudhams reddy duba" #string
+
+designation: 'DevOps'
+
+age: 30 #number/intiger
+
+gpa: 3.5 #float
+
+fav_num: 1e+10 #exponential
+
+birthday: 1990-19-02 19:01:00 #ISO 8601 standerd need to be used to follow the date format
+
+empty: null
+
+#Above details can be stored under object, where we need to call the key by parent object name
+
+employee:
+  - name: "sudhams reddy duba"
+    age: 31
+    designation: 'DevOps'
+    salary: 31000.0
+    fav_num: 1e+10
+    birthday: 1990-02-19 19:10:00
+    empty: null
+  - name: "somu kumar"
+    age: 29
+    designation: "devOps engineer"
+  - name: "teja"
+    age: 34
+    salary: 500000
+
+employee[2].age
+
+#Now call the age using employee.age and name using employee.name
+#sub variables under employee are indentated with 2 spaces (never use tab)
+
+#List:
+
+employees:
+  - "sudhams reddy duba"
+  - "sudheer"
+  - "teja krishna"
+
+or
+
+employees: ["sudhams reddy duba", 'sudheer', "teja krishna"]
+
+#Complex list:
+
+employee:
+  - name: "sudhams reddy duba"
+    age: 31
+  - name: 'sudheer'
+    age: 29
+
+or
+
+employee:
+  - {name: "sudhams reddy duba", age: 31}
+  - {name: 'sudheer', age: 29}
+
+
+or
+
+
+employee:
+  -
+    name: "sudhams reddy duba"
+    age: 31
+  - 
+    name: "sudheer"
+    age: 30
+
+
+#passing values with large context like script or paragraph
+
+description: >
+  This is single line text
+  but we can write in this way to simplify
+  the job while writinh in the YAML file
+
+
+script: |
+  #!/bin/bash
+
+  echo "success"
+
+# > --> to render single line operation in YAML
+# | --> to render multi line operation in YAML
+
+#Anchor a value (which means if you want to reuse the value some where else in the YAML)
+
+employee:
+  name: &test "sudhams reddy duba"  #&name name of the anchor, it doen't need to match to the key name
+  age: 31
+
+
+#Now lets try to use in different place to assign to different key like id
+
+id: *test #id will be assigned with the value of name: "sudhams reddy duba"
+
+#Advantage is that if you change the value at that place it will get reflected to all the key who called that anchor
+
+
+#Now lets achor a key value pair
+
+parent: &base
+  name: "sudhams reddy duba"
+  age: 31
+
+
+child:
+  <<: *base #Now name: "sudhams reddy duba" will be rendered to this object child 
+  age: 40
+
+
+#How to force actual data types to be changed to another data type
+
+employee:
+  name: "sudhams reddy duba"
+  age: !!float 31   #This will be convert to float like 31.0
+  gpa: !!str 3.5    #This will be convert to string like "3.5"
++++
+

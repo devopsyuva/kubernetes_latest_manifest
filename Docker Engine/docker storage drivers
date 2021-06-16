@@ -1,0 +1,52 @@
+In order to write data into container writeable layer, docker supports several storage drivers like
+
+overlay2 (default for all Linux distributions when Docker installed)
+aufs (Docker 18.06)
+devicemapper (direct-lvm)
+btrfs (advanced options, complex to setup and maintain, relies on backing filesystem)
+zfs
+vfs (testing, no COW is used)
+
+Priority order --> "btrfs,zfs,overlay2,aufs,overlay,devicemapper,vfs"
+
+Reference from source code --> https://github.com/docker/docker-ce/blob/19.03/components/engine/daemon/graphdriver/driver_linux.go#L50
+
+Supperted backing filesystem for different drivers:
+
+overlay2 and overlay --> xfs (ftype = 1) and ext4
+aufs --> xfs, ext4
+devicemapper --> direct-lvm
+btrfs --> btrfs
+zfs --> zfs
+vfs --> any filesystem
+
+overlay2, overlay and aufs --> operate at file system rather than block level. Memory efficient but container layer may grow large on write-heavy loads
+
+btrfs, xfs and devicemapper --> Better performance on heavy write operation on container layer. Block level storage.
+
+btrfs and xfs --> needs a lot of memory
+
+zfs --> might be good choice for high-density workloads such as PaaS
+
+All filesystem can be listed in file "/proc/filesystems"
+
+systemctl stop docker
+systemctl status docker
+cp -au /var/lib/docker /var/lib/docker.bk
+ls -l /var/lib/docker*
+rm -rf /var/lib/docker/*
+mount -t btrfs /dev/sdb /var/lib/docker
+df -hT
+cp -au /var/lib/docker.bk/* /var/lib/docker/
+vi /etc/docker/daemon.json
+systemctl start docker
+systemctl status docker
+
+
+btrfs device add /dev/sdc /var/lib/docker
+btrfs filesystem balance /var/lib/docker
+df -h
+
+
+Ceph as storage plugin:
+https://ceph.io/geen-categorie/getting-started-with-the-docker-rbd-volume-plugin/

@@ -1,0 +1,20 @@
+cat /etc/default/kubelet
+
+check cluster dns and cluster domain
+
+kube-dns
+The kube-dns service prior to Kubernetes 1.11 is made up of three containers running in a kube-dns pod in the kube-system namespace. The three containers are:
+
+kube-dns: a container that runs SkyDNS, which performs DNS query resolution
+dnsmasq: a popular lightweight DNS resolver and cache that caches the responses from SkyDNS
+sidecar: a sidecar container that handles metrics reporting and responds to health checks for the service
+Security vulnerabilities in Dnsmasq, and scaling performance issues with SkyDNS led to the creation of a replacement system, CoreDNS.
+
+
+In addition to addressing performance- and security-related issues, CoreDNS fixes some other minor bugs and adds some new features:
+
+Some issues with incompatibilities between using stubDomains and external services have been fixed
+CoreDNS can enhance DNS-based round-robin load balancing by randomizing the order in which it returns certain records
+A feature called autopath can improve DNS response times when resolving external hostnames, by being smarter about iterating through each of the search domain suffixes listed in resolv.conf
+With kube-dns 10.32.0.125.namespace.pod.cluster.local would always resolve to 10.32.0.125, even if the pod doesn’t actually exist. CoreDNS has a “pods verified” mode that will only resolve successfully if a pod exists with the right IP and in the right namespace.
+

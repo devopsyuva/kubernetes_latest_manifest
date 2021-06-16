@@ -1,0 +1,27 @@
+#Static Pods are managed directly by the kubelet daemon on a specific node
+#First, lets choose the node where to launch the static pod
+#Choose a directory /etc/kubelet.d/ and place the static pod yaml
+#/etc/kubelet.d/static-web.yaml and update path to kubelet service
+# Run this command on the node where kubelet is running
+#mkdir /etc/kubelet.d/
+#cat <<EOF >/etc/kubelet.d/static-web.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-web
+  labels:
+    role: myrole
+  namespace: visualpath
+spec:
+  containers:
+    - name: web
+      image: nginx
+      ports:
+        - name: web
+          containerPort: 80
+          protocol: TCP
+EOF
+#Open the service file under "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+#add entry as mentioned below
+--pod-manifest-path=/etc/kubelet.d/
+#Check README.md file from here

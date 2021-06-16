@@ -1,0 +1,97 @@
+Below command is used to generate a self signed certificate to access nginx security by using key and cert. We have issued 
+certifiacte with service name "nginxsvc". If you are using a different service name modify that in CN and O.
+
+>openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/nginx.key -out /tmp/nginx.crt -subj "/CN=nginxsvc/O=nginxsvc"
+
+
+Now create secret to pass the certificates using below command
+
+>kubectl create secret tls nginxsecret --key /tmp/nginx.key --cert /tmp/nginx.crt
+
+After that create custom config file and pass through configmap
+
+++
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server ipv6only=on;
+
+        listen 443 ssl;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        server_name localhost;
+        ssl_certificate /etc/nginx/ssl/tls.crt;
+        ssl_certificate_key /etc/nginx/ssl/tls.key;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+++
+
+>kubectl create configmap nginx-config --from-file=default.conf
+
+Now we are good to go and deploy nginx application usinh deployment as mentioned below and try to access 
+you app in browder using https://<Node_ip>:NodePort
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxsvc
+  labels:
+    app: nginx
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+      - name: configmap-volume
+        configMap:
+          name: nginx-config
+      containers:
+      - name: nginxhttps
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 443
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+        - mountPath: /etc/nginx/conf.d
+          name: configmap-volume
+
+
+
+Reference: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/

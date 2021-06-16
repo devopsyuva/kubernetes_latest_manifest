@@ -1,0 +1,48 @@
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: ceph-storage-class
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: kubernetes.io/rbd
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+parameters:
+  monitors: 192.168.1.11:6789,192.168.1.12:6789,192.168.1.13:6789
+  adminId: admin
+  adminSecretName: ceph-secret
+  adminSecretNamespace: kube-system
+  imageFeatures: layering
+  imageFormat: "2"
+  pool: kube
+  userId: kube
+  userSecretName: ceph-user-secret
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ceph-claim-dynamic
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ceph-pod1
+spec:
+  containers:
+  - name: ceph-busybox
+    image: busybox
+    command: ["sleep", "60000"]
+    volumeMounts:
+    - name: ceph-vol1
+      mountPath: /usr/share/busybox
+      readOnly: false
+  volumes:
+  - name: ceph-vol1
+    persistentVolumeClaim:
+      claimName: ceph-claim-dynamic

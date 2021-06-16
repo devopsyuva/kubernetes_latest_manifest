@@ -1,0 +1,76 @@
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: frontend
+  labels:
+    name: frontend
+spec:
+  replicas: 1
+  selector:
+    name: frontend
+  template:
+    metadata:
+      labels:
+        name: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: katacoda/docker-http-server:health
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+---
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: bad-frontend
+  labels:
+    name: bad-frontend
+spec:
+  replicas: 1
+  selector:
+    name: bad-frontend
+  template:
+    metadata:
+      labels:
+        name: bad-frontend
+    spec:
+      containers:
+      - name: bad-frontend
+        image: katacoda/docker-http-server:unhealthy
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: frontend
+    kubernetes.io/cluster-service: "true"
+  name: frontend
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30080
+  selector:
+    app: frontend

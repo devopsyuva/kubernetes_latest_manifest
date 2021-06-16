@@ -1,0 +1,134 @@
+NFS server configuration:
+=========================
+
+Lets say my NFS server IP address: 192.168.0.50
+Client: 192.168.0.51
+
+Setup NFS server:
+#apt-get update
+#apt-get install -y nfs-kernel-server
+
+Lets create shared directory on NFS server to clients:
+#mkdir -p /var/nfs/data
+#chown nobody:nogroup /var/nfs/data
+
+Note: NFS will translate any root operations on the client to the nobody:nogroup
+credentials as a security measure. Therefore, we need to change the directory
+ownership to match those credentials.
+
+Now export created shared directory:
+#vi/nano /etc/exports
+add below entries based on your configuration
+++
+/var/nfs/data    192.168.0.51(rw,sync,no_subtree_check,no_root_squash)
+/home       192.168.0.51(rw,sync,no_root_squash,no_subtree_check) --> optional
+++
+
+save and exit
+
+Now restart nfs service as mentioned below:
+#systemctl restart nfs-kernel-server
+
+
+
+++
+rw: Share as read-write. Keep in mind that normal Linux permissions still apply. (Note that this is a default option.)
+ro: Share as read-only.
+sync: File data changes are made to disk immediately, which has an impact on performance, but is less likely to result in data loss. On some distributions this is the default.
+async: The opposite of sync; file data changes are made initially to memory. This speeds up performance but is more likely to result in data loss. On some distributions this is the default.
+root_squash: Map the root user and group account from the NFS client to the anonymous accounts, typically either the nobody account or the nfsnobody account. See the next section, “User ID Mapping,” for more details. (Note that this is a default option.)
+no_root_squash: Map the root user and group account from the NFS client to the local root and group accounts.
+++
+
+
+
+NFS client configuration:
+=========================
+
+#apt update
+#apt-get install -y nfs-common
+
+Now create on directory to moun the NFS path or we can use /mnt directory to
+mount:
+#mkdir -p /nfs/general
+#mount 192.168.0.50:/var/nfs/data /nfs/general
+
+verify the mounted path to client with below command:
+#df -h
+
+Note: After next reboot mount path will be removed, so in-order to make it
+permanent add the mount entries of NFS server to the client server in fstab
+file.
+
+#vi /etc/fstab
+++
+192.168.0.50:/var/nfs/data    /nfs/general   nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+192.168.0.50:/home       /nfs/home      nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+++
+Save and exit
+
+
+Mount the NFS volume to docker container:
+=========================================
+Syntax:
+
+docker service create \
+    --mount 'type=volume,src=<VOLUME-NAME>,dst=<CONTAINER-PATH>,volume-driver=local,volume-opt=type=nfs,volume-opt=device=<nfs-server>:<nfs-path>,"volume-opt=o=addr=<nfs-address>,vers=4,soft,timeo=180,bg,tcp,rw"'
+    --name myservice \
+    <IMAGE>
+
+Example:
+
+docker service create -d \
+    --name nfs-service \
+    --mount 'type=volume,source=nfsvolume,target=/app,volume-driver=local,volume-opt=type=nfs,volume-opt=device=:/var/nfs/data,"volume-opt=o=191.68.0.50,rw,nfsvers=4,async"' \
+    nginx:latest
+
+In this case, we can also create a volume which points to NFS server and then use that volume to our container:
+
+docker volume create --driver local \
+    --opt type=nfs \
+    --opt o=addr=192.168.56.10,rw \
+    --opt device=:/var/backups \
+    sudheer
+
+To use physical hard disk/partition, please use below command:
+
+$ docker volume create --driver local \
+    --opt type=btrfs \
+    --opt device=/dev/sdc local-disk
+
+
+Useful commands for NFS:
+=========================
+The nfsstat command can display useful NFS information. For example, the following command displays what is currently mounted by NFS clients:
+
+root@test:~# nfsstat -m
+/var/lib/docker/volumes/sudhams/_data from :/var/backups
+ Flags: rw,relatime,vers=3,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.56.10,mountvers=3,mountproto=tcp,local_lock=none,addr=192.168.56.10
+root@test:~# 
+
+
+root@test:~# showmount -a
+All mount points on test.sudheerdemo.tld:
+192.168.56.10:/tmp/backups
+192.168.56.10:/var/backups
+root@test:~#
+
+
+root@test:~# tail -2 /proc/mounts
+:/var/backups /var/lib/docker/volumes/sudhams/_data nfs rw,relatime,vers=3,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.56.10,mountvers=3,mountproto=tcp,local_lock=none,addr=192.168.56.10 0 0
+nsfs /run/docker/netns/b4b6a759e77b nsfs rw 0 0
+root@test:~#
+
+root@test:~# mount | tail -2
+:/var/backups on /var/lib/docker/volumes/sudhams/_data type nfs (rw,relatime,vers=3,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.56.10,mountvers=3,mountproto=tcp,local_lock=none,addr=192.168.56.10)
+nsfs on /run/docker/netns/b4b6a759e77b type nsfs (rw)
+root@test:~#
+
+
+
+
+
+
+

@@ -1,0 +1,97 @@
+Setup local docker registry first:
+
+#docker service create --name registry --publish published=5000,target=5000 registry:2
+
+check the service status
+#docker service ls
+
+verify registry connectivity
+#curl http://localhost:5000/v2/
+
+create a sample application like redis
+
+#mkdir stackdemo
+#cd stackdemo
+
+create python redis like app.py
+
+++
+from flask import Flask
+from redis import Redis
+
+app = Flask(__name__)
+redis = Redis(host='redis', port=6379)
+
+@app.route('/')
+def hello():
+    count = redis.incr('hits')
+    return 'Hello World! I have been seen {} times.\n'.format(count)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=True)
+++
+
+create requirements.txt to install python modules for redis:
+
+++
+flask
+redis
+++
+
+Dockerfile to build custom image with app.py:
+
+++
+FROM python:3.4-alpine
+ADD . /code
+WORKDIR /code
+RUN pip install -r requirements.txt
+CMD ["python", "app.py"]
+++
+
+Now, lets create a compose file to deploy the application stack:
+
+++
+version: '3'
+
+services:
+  web:
+    image: 127.0.0.1:5000/stackdemo
+    build: .
+    ports:
+      - "8000:8000"
+  redis:
+    image: redis:alpine
+++
+
+Test application deployment:
+
+#docker-compose up -d
+#docker-compose ps
+
+verify application access:
+
+#curl http://localhost:8000
+
+bring down application with below command after success testing:
+
+#docker-compose down --volumes
+
+
+Now, after success test. we can push the image to the internal registry running the swarm cluster:
+
+#docker-compose push
+
+
+Deploye the stack to the swarm cluster:
+
+#docker stack deploy --compose-file docker-compose.yml stackdemo
+
+verify the status
+
+#docker stack services stackdemo
+
+verify --> curl http://localhost:8000 or give any node IP address of the swarm cluster
+
+Bring down the stack --> docker stack rm stackdemo
+
+bring down the registry service --> docker service rm registry

@@ -1,0 +1,166 @@
+#Reference: https://docs.openshift.com/container-platform/3.6/admin_guide/scheduling/pod_affinity.html
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-affinity
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: security
+            operator: In
+            values:
+            - S1
+        #topologyKey: failure-domain.beta.kubernetes.io/zone
+        topologyKey: kubernetes.io/hostname
+  containers:
+  - name: nginx-pod-affinity
+    image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-s2
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: security
+            operator: In
+            values:
+            - s1
+        topologyKey: kubernetes.io/hostname
+  containers:
+  - name: pod-antiaffinity
+    image: docker.io/ocpqe/hello-pod
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-pod-antiaffinity
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: security
+              operator: In
+              values:
+              - S2
+          topologyKey: kubernetes.io/hostname
+  containers:
+  - name: with-pod-affinity
+    image: docker.io/ocpqe/hello-pod
+
+=============
+
+tested once:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-affinity
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: nginx
+            operator: In
+            values:
+            - basictest 
+        topologyKey: kubernetes.io/hostname
+  containers:
+  - name: pod-affinity
+    image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: basic-nginx
+  labels:
+    nginx: basictest
+spec:
+  nodeSelector:
+    app: sudhams
+  containers:
+  - name: nginx-c1
+    image: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  replicas: 3
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: nginx
+                operator: In
+                values:
+                - basictest
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: nginx
+        image: nginx #1.16.1
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: temp-nginx
+  template:
+    metadata:
+      labels:
+        app: temp-nginx
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: nginx
+                operator: In
+                values:
+                - basictest
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: nginx
+        image: nginx #1.16.1
+        ports:
+        - containerPort: 80

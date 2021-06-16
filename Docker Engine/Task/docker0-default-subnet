@@ -1,0 +1,91 @@
+root@ubuntuserverdemo:~# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:b8:22:b6 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic enp0s3
+       valid_lft 86362sec preferred_lft 86362sec
+    inet6 fe80::a00:27ff:feb8:22b6/64 scope link 
+       valid_lft forever preferred_lft forever
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:35:70:d7:9f brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+root@ubuntuserverdemo:~# 
+
+root@ubuntuserverdemo:~# docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+1dbbc17abd24        bridge              bridge              local
+199523bedd56        host                host                local
+c716838a74fd        none                null                local
+root@ubuntuserverdemo:~# 
+
+From above command, we can see that default network. Now we need to modify the default docker0 bridge subnet to 172.30.1.1/24
+
+
+root@ubuntuserverdemo:~# cat /etc/docker/daemon.json 
+{
+  "bip": "172.30.1.1/24"
+}
+root@ubuntuserverdemo:~# 
+root@ubuntuserverdemo:~# systemctl restart docker
+root@ubuntuserverdemo:~# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:b8:22:b6 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic enp0s3
+       valid_lft 85630sec preferred_lft 85630sec
+    inet6 fe80::a00:27ff:feb8:22b6/64 scope link 
+       valid_lft forever preferred_lft forever
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:35:70:d7:9f brd ff:ff:ff:ff:ff:ff
+    inet 172.30.1.1/24 brd 172.30.1.255 scope global docker0
+       valid_lft forever preferred_lft forever
+root@ubuntuserverdemo:~#
+
+Now we can see that docker0 interface was updated with 172.30.1.1/24 subnet.
+
+lets test by creating a container to see if it picks IP address form new subnet.
+
+root@ubuntuserverdemo:~# docker container run -d --name testnginx nginx:1.19.0
+Unable to find image 'nginx:1.19.0' locally
+1.19.0: Pulling from library/nginx
+8559a31e96f4: Pull complete 
+8d69e59170f7: Pull complete 
+3f9f1ec1d262: Pull complete 
+d1f5ff4f210d: Pull complete 
+1e22bfa8652e: Pull complete 
+Digest: sha256:21f32f6c08406306d822a0e6e8b7dc81f53f336570e852e25fbe1e3e3d0d0133
+Status: Downloaded newer image for nginx:1.19.0
+2e5ce73814c61b23f6c48d6b5f60a88f280b24976cbd4e0a3afca78e82816c6e
+root@ubuntuserverdemo:~# docker container ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+2e5ce73814c6        nginx:1.19.0        "/docker-entrypoint.…"   11 seconds ago      Up 3 seconds        80/tcp              testnginx
+root@ubuntuserverdemo:~# 
+root@ubuntuserverdemo:~# 
+root@ubuntuserverdemo:~# docker container inspect --format "{{ .NetworkSettings.IPAddress }}" testnginx 
+172.30.1.2
+root@ubuntuserverdemo:~# 
+root@ubuntuserverdemo:~# curl -I 172.30.1.2
+HTTP/1.1 200 OK
+Server: nginx/1.19.0
+Date: Sat, 15 Aug 2020 12:15:30 GMT
+Content-Type: text/html
+Content-Length: 612
+Last-Modified: Tue, 26 May 2020 15:00:20 GMT
+Connection: keep-alive
+ETag: "5ecd2f04-264"
+Accept-Ranges: bytes
+
+root@ubuntuserverdemo:~#
+
+
