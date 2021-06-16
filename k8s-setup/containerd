@@ -71,6 +71,8 @@ Since I am using subnet for POD as 10.244.0.0/16 instead of default 192.168.0.0/
 
 cidr: 10.244.0.0/16
 
+Refernces: please read calico project details for more info --> https://docs.projectcalico.org/getting-started/kubernetes/quickstart
+
 kubectl apply -f custom-resources.yaml 
 
 On worker nodes to join the cluster:
