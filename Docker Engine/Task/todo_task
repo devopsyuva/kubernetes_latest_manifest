@@ -1,0 +1,31 @@
+Task 1:
+1) Execute docker cli commands from remote machine against a specific docker host/server
+
+Task 2:
+
+1) First ensure your docker root data is pointing to directory path --> /docker_data
+2) docker info --> Docker root directory
+3) Lets say ur running out of disk #df -h
+4) Add new disk to docker host and point the directory to that disk
+
+Note: Create some container llke nginx and perform the above task
+
+Task 3:
+
+1) Create a container on default network (docker0)
+2) Launch another container on user defined network #docker network create
+3) Check if we can communicate from one container to another container which are launched to two different networks
+4) yes, how? if no, why
+
+Task 4:
+
+1) Ensure docker uses user defined bridge network as default, instead of docker0 bridge. Launch a container and verify containers gets an IP from the default network which u have spcified
+2) can we change docker0 default subnet (Example: 172.17.0.0/16 to 10.244.0.1/24) ?. Launch a container and verify the IP address which should be from Ex 10.244.0.2
+
+Task 5:
+
+1) Ensure we are using secured communication between docker client running on remote server and docker daemon running on one machine
+will communicate using certs (TLS/SSL)
+2) How we can still run containers and access them even through our docker daemon is stopped
+    1) check docker daemon is stopped. if not, stop it #systemctl status/stop docker
+    2) Now do necesary changes to enusre containers/application inside container are accessiable
