@@ -29,3 +29,8 @@ will communicate using certs (TLS/SSL)
 2) How we can still run containers and access them even through our docker daemon is stopped
     1) check docker daemon is stopped. if not, stop it #systemctl status/stop docker
     2) Now do necesary changes to enusre containers/application inside container are accessiable
+
+Task 6:
+
+1) Deploy simple nginx web server and make sure appliation is accessing from outside the node.
+2) Write html code which should display one image like jpeg, jpg in file index.html and place it in directory /usr/share/nginx/html

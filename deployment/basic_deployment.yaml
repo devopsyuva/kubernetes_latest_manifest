@@ -24,6 +24,38 @@ spec:
         ports:
         - containerPort: 80
 ---
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.19.0
+        ports:
+        - containerPort: 80
+        volumeMounts:
+         - mountPath: /usr/share/nginx/html/index.html
+           name: www
+           subPath: index.html
+      volumes:
+        - name: www
+          downwardAPI:
+            items:
+              - path: "index.html"
+                fieldRef:
+                  fieldPath: metadata.name
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -100,76 +132,23 @@ spec:
                 sleep 5;
               done
 ---
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-pv-volume
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data"
-    type: DirectoryOrCreate #If nothing exists at the given path, an empty directory will be created there as needed with permission set to 0755, having the same group and ownership with Kubelet.
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-pv-claim
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-spec:
-  ports:
-  - port: 3306
-  selector:
-    app: mysql
-  clusterIP: None
----
-apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: nginx-deployment
+  labels:
+    app: nginx
 spec:
+  replicas: 3
   selector:
     matchLabels:
-      app: mysql
-  strategy:
-    type: Recreate
+      app: temp-nginx
   template:
     metadata:
       labels:
-        app: mysql
+        app: temp-nginx
     spec:
       containers:
-      - image: mysql:5.6
-        name: mysql
-        env:
-        - name: MYSQL_ROOT_HOST
-          value: '%'
-          # Use secret in real usage
-        - name: MYSQL_ROOT_PASSWORD
-          value: password
-        ports:
-        - containerPort: 3306
-          name: mysql
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pv-claim
+      - name: 1st
+        image: nginx
+        command: ["/bin/bash", "-c", "nginx -g 'daemon off;' && while true;do hostname -f > /usr/share/nginx/html/index.html; sleep 10; done"]

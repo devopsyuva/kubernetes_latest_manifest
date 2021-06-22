@@ -156,7 +156,7 @@ spec:
 ++
 
 
-gitRepo:
+gitRepo: (depricated)
 ========
 
 POD:

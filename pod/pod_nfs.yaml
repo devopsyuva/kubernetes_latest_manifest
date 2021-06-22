@@ -23,28 +23,28 @@ metadata:
   name: multi-container-pod # Name of our pod
 spec:
   volumes:
-  - name: html  # Creating a shared volume for my containers
-    nfs:
-      server: 192.168.1.110 # Please change this to your NFS server
-      path: /baskups # Please change this to the relevant share
+    - name: html # Creating a shared volume for my containers
+      nfs:
+        server: 192.168.1.110 # Please change this to your NFS server
+        path: /baskups # Please change this to the relevant share
   containers:
-  - name: 1st
-    image: nginx
-    volumeMounts:
-    - name: html
-      mountPath: /usr/share/nginx/html
-    ports:
-    - name: http
-      hostPort: 8090
-      containerPort: 80
-  - name: 2nd
-    image: debian
-    volumeMounts:
-    - name: html
-      mountPath: /html
-    command: ["/bin/sh", "-c"]
-    args:
-      - while true; do
+    - name: 1st
+      image: nginx
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      ports:
+        - name: http
+          hostPort: 8090
+          containerPort: 80
+    - name: 2nd
+      image: debian
+      volumeMounts:
+        - name: html
+          mountPath: /html
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do
           date >> /html/index.html;
           sleep 5;
-        done
+          done

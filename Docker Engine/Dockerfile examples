@@ -5,7 +5,7 @@ COPY --> copy files from docker host path to image layer
 WORKDIR --> shift to specific path, as we do with cd command in linux
 LABEL --> add labels to your image to help organize images by project, like version, medata info etc.,
 ENV --> pass environment variable, when we are working with package installation which need some values to be passed
-EXPOSE --> open a port in the container for application running to listen 
+EXPOSE --> open a port in the container for application running to listen
 ADD --> Similar action can be performed as COPY, but ADD allows us to some addition functionality like tar download from URL etc., example: ADD http://example.com/big.tar.xz /usr/src/things/
 ENTRYPOINT --> pass utility/command as main command in the image
 CMD --> arguments for the command can be passed here
@@ -65,6 +65,9 @@ RUN apt-get update && \
     apt-get install -y iproute2 nginx curl
 COPY index.html /usr/share/nginx/html/
 VOLUME /usr/share/nginx/html
+# forward request and error logs to docker log collector
+RUN ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 HEALTHCHECK CMD curl --fail http://localhost:80/ || exit 1
@@ -118,7 +121,6 @@ curl -sSL "http://$JENKINS_HOST/pluginManager/api/xml?depth=1&xpath=/*/*/shortNa
 
 Sample output for Jenkins verion 2.289.1 LTS
 ++
-root@dockerserverdemo:~/docker_images/jenkins# JENKINS_HOST=sudhams:sudhams@dockerserverdemo:8097                                                                                         root@dockerserverdemo:~/docker_images/jenkins# curl -sSL "http://$JENKINS_HOST/pluginManager/api/xml?depth=1&xpath=/*/*/shortName|/*/*/version&wrapper=plugins" | perl -pe 's/.*?<shortName>([\w-]+).*?<version>([^<]+)()(<\/\w+>)+/\1 \2\n/g'|sed 's/ /:/'
 sshd:3.0.3
 cloudbees-folder:6.15
 trilead-api:1.0.13
