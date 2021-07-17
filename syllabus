@@ -1,215 +1,249 @@
-Docker:
+Topic 1) OS
+1.1: Oracle VirtualBox installation and basic Configuration.
+1.2: Ubuntu 20.04 LTS server installation and configuration over Oracle VirtualBox.
+1.3: GCP account creation and manager the Instance over Compute Engine service in GCP for people who don not enough resource on local system.
 
-Docker Engine:
-1) Container tools
-    lxc, Docker,containerd etc.,
+Topic 2) Networking
+2.1: IPv4
+2.2: Classes in IPv4
+2.3: subnetmask, gateway, broadcast, router and switch etc.,
+2.4: Public and Private IP address in each class A, B and C
+2.5: Calculating number of devices that can be connection for a given CIDR
+2.6: Networking configuration on Ubuntu 20.04 LTS OS and basic understanding over different network types in VirtualBox
 
-2) Docker Engine Installion
-    Manual deployment of Docker CE on Ubuntu and CentOS
-    Automate deployment with help of Vagrant
+Topic 3) Docker tools
 
-3) Basic introduction to Docker Engine
-    Datapath
-    version check
-    default locations
-    commands execution
+3.1) Docker Engine
+3.1.1: Containerization tools
+3.1.2: lxc, Docker, containerd etc.,
 
-4) Docker architecture
-    Docker daemon
-    Docker client
-    Docker registry
-    Docker objects
-      imgaes
-      containers
-      netwokring
-      services
+3.2) Docker Engine Installion
+3.2.1: Manual deployment of Docker CE on Ubuntu and CentOS
+3.2.2: Automate deployment with help of Vagrant over VirtualBox
 
-5) Underlying technologies of Docker
-    namespaces like pid,net,ipc,mnt,uts
-    cgroups
-    UFS (Union File System)
-    container format like libcontainer,BSD jails etc.,
+3.3) Basic introduction to Docker Engine
+3.3.1: Docker datapath
+3.3.2: version check
+3.3.3: default locations to take backup
+3.3.4: commands execution
 
-6) Images and container management
-    docker image pull/push
-    Image layers
-    container creation
-    Sample application deployment like web server
-    Basic things that to be considered while working with images and containers
+3.4) Docker architecture
+3.4.1: Docker daemon
+3.4.2: Docker client
+3.4.3: Docker registry
+3.4.4: Docker objects
+--> images
+--> containers
+--> netwokring
+--> services
+--> volumes
+--> repository
 
-7) Docker networking
-    Understanding netwokring like IP, Classes, subnetmask, CIDR, gateway, broadcast, public and provate network in each class etc.,
-    Types of network in Docker:
-      host
-      bridge
-      null
-      overlay
-      macvlan
+3.5) Underlying technologies for applications to run on Containerization tools
+3.5.1: namespaces like pid,net,ipc,mnt,uts
+3.5.2: cgroups
+3.5.3: UFS (Union File System)
+3.5.4: container format like libcontainer,BSD jails etc.,
 
-8) Docker storage
-    Basic understanding of emphemeral and persistent storage
-    Types of volume mounts
-      Bind mount
-      Volume mount
-      tempfs mount
+3.6) Images and container management
+3.6.1: docker image pull/push
+3.6.2: Image layers
+3.6.3: container creation
+3.6.4: Sample application deployment like web server
+3.6.5: Basic things that to be considered while working with images and containers
 
-9) Backup and restore of Images, containers and Docker/Application data 
+3.7) Docker networking
+3.7.1: Types of network in Docker
+--> host
+--> bridge
+--> null
+--> overlay
+--> macvlan
+3.7.2: Docker link
 
-10) Building custom images
-    Develop custom image through Dockerfile
-    Convert container into Image
+3.8) Docker storage
+3.8.1: Basic understanding of emphemeral and persistent storage
+3.8.2: Types of volume mounts
+--> Bind mount
+--> Volume mount
+--> tempfs mount
 
-11) Registry management
-    Docker Hub
-    Gitlab registry
-    Local registry
+3.9) Backup and restore
+3.9.1: Images backup to ensure we can migrate to other docker host machines
+3.9.2: containers backup to ensure applications are restored
+3.9.3: Docker/Application data 
 
-12) Securing Docker
-    Ensure Docker communication through TLS
-    Firewall ports
-    Communication to Docker through unix socket and tcp protocal
+3.10) Building custom images
+3.10.1: Develop custom image through Dockerfile
+3.10.2: Convert container into Image
+3.10.3: CICD automation to build custom images --> Jenkins, GItLab CI, GitLab Actions
 
-13) Docker overlay network configuration(hardway) without using Docker Swarm
+3.11) Registry management
+3.11.1: Docker Hub
+3.11.2: Gitlab registry
+3.11.3: Local registry
 
-14) Docker compose, Docker machine and Docker swarm
-    Building compose file for orchestration of application deployment
-    Docker machine management
-    Deployment and understanding of Docker Swarm cluster
-    Difference between docker swarm and kubernetes
+3.12) Securing Docker
+3.12.1: Ensure Docker communication through TLS
+3.12.2: Firewall ports
+3.12.3: Communication to Docker through unix socket and tcp protocol
 
-15) Task
-    Deployment of application like nginx, mariadb and jenkins
-    Deploy wordpress as webserver and database for storage using Dockercompose
-    Deploy Node.js application with custom Dockerfile
-    Automate Image build with help of Jenkins CICD pipeline
+3.13) Docker overlay network configuration(hardway) using consul/etcd key-value store without using Docker Swarm
 
-JSON and YAML core concepts:
+Topic 4) Docker compose
+4.1: what is JSON?
+4.2: how to write a JSON file and validate for testing?
+4.3: what is YAML?
+4.4: how to write YAML files and validate for testing?
+4.5: writing compose to orchestrate resource creation on Docker Engine using compose tool
 
-1) what is JSON?
-2) how to write a JSON file and validate for testing?
-3) what is YAML?
-4) how to write YAML files and validate for testing?
+Topic 5) Docker machine and Docker swarm
+5.1: Building compose file for orchestration of application deployment
+5.2: Docker machine management
+5.3: Deployment and understanding of Docker Swarm cluster
+5.4: Replication, Upgrade and Downgrade services
+5.5: Config and Secrets over Swarm cluster
+5.6: Difference between docker swarm and kubernetes
 
-kubernetes Deep Dive:
+Topic 6) Docker Security tools
+6.1: Docker CIS benchmarking
+6.2: Image Valurabilities scan and report tools like trivy, clair etc.,
+6.3: Dockerfile best practices
 
-1) kubernetes components and responsibility
-    controller nodes:
-      kube-apiserver
-      kube-control-manager/cloud-control-manager
-      kube-schduler
-      calico,flannel(deprecated from 1.18),wavenet etc.,
-      coreDNS
-      etcd key-value pair storage
-      kubelet
-      kube-proxy
-      Docker Engine/containerd/cri-o etc.,
-    compute nodes:
-      kubelet
-      kube-proxy
-      Docker Engine/containerd/cri-o etc.,
+Topic 7) kubernetes orchestration
 
-2) Deployment of kubernets cluster using microk8s(ubuntu),minikube,kubeadm
-    Three nodes (1 for controller and 2 for compute nodes)
+7.1) kubernetes components and responsibility
+7.1.1: controller nodes:
+--> kube-apiserver
+--> kube-control-manager/cloud-control-manager
+--> kube-schduler
+--> calico,flannel(deprecated from 1.18),wavenet etc.,
+--> coreDNS
+--> etcd key-value pair storage
+--> kubelet
+--> kube-proxy
+--> Docker Engine/containerd/cri-o etc.,
+7.1.2) compute nodes
+--> kubelet
+--> kube-proxy
+--> Docker Engine/containerd/cri-o etc.,
 
-3) POD object creation using single container and multi-container
-    Understanding common networking and common storage in POD (shared namespaces)
-    Sample application deployment using nginx for single container in POD
-    Multi-container deployment, one for web application and second for data pull
-    POD creation with initContainer advantages for pre-request
-    static POD deployment
-    Deploying application from Private repository
-    resource allocation like CPU and MEMORY
+7.2) Deploying kubernets cluster using microk8s(ubuntu),minikube,kubeadm for Standalone cluster and HA
+7.2.1: Three nodes (1 for controller and 2 for compute nodes) setup over GCP with containerd as CRI(Container Runtime Interface)
+7.2.2: Two nodes (1 for controller and 1 for compute) on local VirtualBox using Docker as CRI
 
-4) ReplicationController object (RC)
-    When to use replication controller?
-    Disadvanatages of deploying application with single POD
-    Understanding template and selector parameters
+7.3) POD object creation using single container and multi-container
+7.3.1: Understanding common networking and shared storage concept in POD
+7.3.2: Sample application deployment using nginx for single container in POD
+7.3.3: Multi-container deployment, one for web application and second for data pull
+7.3.4: POD creation with initContainer advantages
+7.3.5: static POD deployment which are managed by kubelet
+7.3.6: Deploying application from Private repository
+7.3.7: resource allocation like CPU and MEMORY
+7.3.8: Empheimeral storage for POD
 
-5) ReplicaSet object (RS)
-    Difference between RreplicationController and ReplicaSet
-    Advantages of adding matchLabels
-    when to use replicaSet?
+7.4) ReplicationController object (RC)
+7.4.1: When to use replication controller?
+7.4.2: Disadvanatages of deploying application as standalone POD
+7.4.3: Understanding template and selector parameters
+7.4.4: Scalein and Scaleout
 
-6) Deployment object (deploy)
-    Advantages of Deployment over POD, RC and RS
-    Sample application deployment like Jenkins, nginx and capture the advantages over other objects
-    Scaleout and Scalein for Deployment
-    Deployment Stratagies like RollingUpdate and ReCreate difference
-    Rollout, Rollback and RolloutHistory of deployment
+7.5) ReplicaSet object (RS)
+7.5.1: Difference between RreplicationController and ReplicaSet
+7.5.2: Advantages of adding matchLabels
+7.5.3: when to use replicaSet?
 
-7) Daemonset object (DS)
-    DaemonSet usecases over deployment object
-    Advantages of using monitoring tools to deploy through DaemonSet obejct
-    Deployment Stratagies like RollingUpdate and OnDelete difference
-    Rollout, Rollback and RolloutHistory of DaemonSet
+7.6) Deployment object (deploy)
+7.6.1: Advantages of Deployment over POD, RC and RS
+7.6.2: Sample application deployment like Jenkins, nginx and capture the advantages over other objects
+7.6.3: Scaleout and Scalein for Deployment
+7.6.4: Deployment Stratagies like RollingUpdate and ReCreate difference
+7.6.5: Rollout, Rollback and RolloutHistory of deployment
 
-8) StatefulSet object (sts)
-    Difference between stateful and stateless applications
-    StatefulSet application deployment advantages
-    Scaleout and Scalein for Deployment
-    Deployment Stratagies like RollingUpdate and OnDelete difference
-    Rollout, Rollback and RolloutHistory of StatefulSet
+7.7) Daemonset object (DS)
+7.7.1: DaemonSet usecases over deployment object
+7.7.2: Advantages of using monitoring tools to deploy through DaemonSet obejct
+7.7.3: Deployment Stratagies like RollingUpdate and OnDelete difference
+7.7.4: Rollout, Rollback and RolloutHistory of DaemonSet
 
-9) volumes:
-    empheimeral and persistant storage differences
-    Different types of volume plugins like emptyDir, hostPath, NFS etc.,
-    Do's and Dont's of using volumes for application deployment
+7.8) StatefulSet object (sts)
+7.8.1: Difference between stateful and stateless applications
+7.8.2: StatefulSet application deployment advantages
+7.8.3: Scaleout and Scalein for Deployment
+7.8.4: Deployment Stratagies like RollingUpdate and OnDelete difference
+7.8.5: Rollout, Rollback and RolloutHistory of StatefulSet
 
-10) PersistentVolume, PersistantVolumeClaim and StorageClass (PV and PVC)
-     Advanatages of using PV over volume plugins for data dependent applications
-     Static and Dynamic PV creation
-     PVC assignment in POD, Deployment, Daemonset, StatefulSet objects
-     StargaeClass creation for Dynamic provision
-     NFS, Ceph RBD storage as examples
+7.9) volumes
+7.9.1: empheimeral and persistant storage differences
+7.9.2: Different types of volume plugins like emptyDir, hostPath, NFS etc.,
+7.9.3: Do's and Dont's of using volumes for application deployment
 
-11) Services (svc)
-     Exposing application running on different object through service
-     Understanding differenece between ClusterIP, NodePort, LoadBalancing, ExternalIP and ExternalName
-     When to use these different types of services?
+7.10) PersistentVolume, PersistantVolumeClaim and StorageClass (PV and PVC)
+7.10.1: Advanatages of using PV over volume plugins for data dependent applications
+7.10.2: Static and Dynamic PV creation
+7.10.3: PVC assignment in POD, Deployment, Daemonset, StatefulSet objects
+7.10.4: StargaeClass creation for Dynamic provision
+7.10.5: NFS, Ceph RBD storage as examples
+7.10.6: Access Modes: ReadWriteOnce, ReadWriteMany, ReadOnlyMany
+7.10.7: ReClaim policy: Retain, ReCycle, Delete
 
-12) secrets and configmap (secret, cm)
-     How to pass sensitive data through secret like certs, password, token etc.,
-     How to pass paintext data through configMap like configuration files, scripts etc.,
-     Using secret in POD object through env and volumes
-     using configMap in POD object through env and volumes
+7.11) Services (svc)
+7.11.1: Exposing application running on different object through service
+7.11.2: Understanding differenece between ClusterIP, NodePort, LoadBalancing, ExternalIP and ExternalName
+7.11.3: When to use these different types of services?
 
-13) Ingress (ing)
-     Access application deployed with the cluster through IngressController
-     Deploying Nginx IngressController
-     Ingress rules creation secured and non-secure communication
+7.12) secrets and configmap (secret, cm)
+7.12.1: How to pass sensitive data through secret like certs, password, token etc.,
+7.12.2: How to pass paintext data through configMap like configuration files, scripts etc.,
+7.12.3: Using secret in POD object through env and volumes
+7.12.4: using configMap in POD object through env and volumes
 
-14) Horizontal POD AutoScalling (HPA):
-     HPA deployent to test auto scalling
-     Deployment of metric server to achieve HPA
+7.13) Ingress (ing)
+7.13.1: Access application deployed with the cluster through IngressController
+7.13.2: Deploying Nginx IngressController
+7.13.3: Ingress rules creation secured and non-secure communication
 
-15) Scheduling and probes
-     Different types of scheduling like nodename, nodeSelector, podAffinity, podAntiAffinity, nodeAffinity
-     Advantages of using liveness, readiness and startup probes to verify application availability
+7.14) Horizontal POD AutoScalling (HPA)
+7.14.1: HPA deployent to test auto scalling
+7.14.2: Deployment of metric server to achieve HPA
 
-16) Jobs and CronJobs
-     How to achieve auto backup and restore using CronJobs for application like etcd key-value pair storage
-     for kubernetes cluster
-     Jobs responsibility
+7.15) Scheduling and probes
+7.15.1: Different types of scheduling like nodename, nodeSelector, podAffinity, podAntiAffinity, nodeAffinity
+7.15.2: Advantages of using liveness, readiness and startup probes to verify application availability
 
-17) calico networking
-     How to migrate from flannel to calico?
-     How to use flannel for POD networking and Calico for network security
-     calicoctl operations
-     network policy and global network policy
+7.16) Jobs and CronJobs
+7.16.1: How to achieve auto backup and restore using CronJobs for application like etcd key-value pair storage
+7.16.2: for kubernetes cluster
+7.16.3: Jobs responsibility
 
-18) authetication and authorization
-     authetication:
-       user, group and serviceaccount (token), certs
-       kubeconfig entries and access multiple cluster through kubernetes config file
-     autherization:
-       Role Back Access Control (RBAC)
-       role, rolebinding, clusterrole, clusterrolebinding
+7.17) calico networking
+7.17.1: How to migrate from flannel to calico?
+7.17.2: How to use flannel for POD networking and Calico for network security
+7.17.3: calicoctl operations
+7.17.4: network policy and global network policy
 
-19) Dashboard
-      deployment of kubernetes dashboard and creating kubernetes object through dashboard
-      How to autheticate to dashboard through token and kubeconfig
+7.18) authetication and authorization
+7.18.1) authetication
+7.18.1.1: user, group and serviceaccount (token), certs
+7.18.1.2: kubeconfig entries and access multiple cluster through kubernetes config file
+7.18.2) autherization
+7.18.2.1: Role Back Access Control (RBAC)
+7.18.2.2: role, rolebinding, clusterrole, clusterrolebinding
 
-20) Task:
+7.19) Dashboard
+7.19.1: deployment of kubernetes dashboard and creating kubernetes object through dashboard
+7.19.2: How to autheticate to dashboard through token and kubeconfig
+
+7.20) Securing k8s
+7.20.1: CIS benchmarking test
+7.20.2: kube-bench testing
+7.20.3: Flaco
+7.20.4: Audit Loggining
+7.20.5: OPA
+
+7.21) Automate application deployment using CICD on k8s
+
+7.22) Kubernetes Task 
       a. wordpress and database application deployment
       b. Jenkins deployment with data persistent after upgrading/downgrade
       c. Backup and restore of etcd service data using cronjob
@@ -218,27 +252,25 @@ kubernetes Deep Dive:
       f. Automate application deployment with the help of GitOps and ArgoCD
       g. Understanding CRD and CR for operators
 
-Helm charts:
-
-1) what is chart and maifest?
-2) helm architecture and components
-3) helm configuration and repo setup
-4) helm application deployment
+Topic 8) Helm charts
+8.1) what is chart and maifest?
+8.2) helm architecture and components
+8.3) helm configuration and repo setup
+8.4) helm application deployment
       a. Deploy nginx web application with custom values
       b. Rollout and Rollback application using helm cli
       c. test applications deployed through Helm using #helm test   
-5) helm custom chart development
+8.5) helm custom chart development
       a. helm default directory structure
       b. update _helper.tpl file for custom methods
       c. how to call data from Chart.yaml and values.yaml file to templates
-6) Deploy monitoring tools using custom helm charts
+8.6) Deploy monitoring tools using custom helm charts
       a. EFK deployment
       b. Prometheus and Grafana deployment
 
-Terraform
-
-1) what is IaC?
-2) Difference between Terraform and Ansible(Any Configuration Management Tools like Puppet, Chef etc.,)
-3) What is terraform cloud, terraform hub, terraform provider, resource etc.,
-4) understanding Input variables, Output value and Local value
-5) Modules: root module and child modules
+Topic 9) Terraform
+9.1) what is IaC?
+9.2) Difference between Terraform and Ansible(Any Configuration Management Tools like Puppet, Chef etc.,)
+9.3) What is terraform cloud, terraform hub, terraform provider, resource etc.,
+9.4) understanding Input variables, Output value and Local value
+9.5) Modules: root module and child modules
