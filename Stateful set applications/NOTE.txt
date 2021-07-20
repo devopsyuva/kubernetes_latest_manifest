@@ -2,8 +2,7 @@
 #holds on to that data until the next time the client issues a request. The
 #data which is saved is known as the state of the app, hence the term
 #stateful. How is that data stored? Either locally or on a remote host until
-#the time at which the user logs out, or following a predetermined amount of
-#time when the session is set to expire.
+#the time at which the user logs out.
 
 #A stateless application, by contrast, is an application program that
 #doesn’t save client data generated in one session for use in the next with
