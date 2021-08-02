@@ -21,3 +21,25 @@ kubectl run --generator=run-pod/v1 --rm utils -it --image dubareddy/utils bash
 
 When you want to do curl -v http://my-service or curl -v http://my-service.default.svc.cluster.local
 according your namespace(in this example it is default), it will redirect you at the DNS level to http://my.database.example.com
+
+root@controlplanenode:~# kubectl get svc
+NAME              TYPE           CLUSTER-IP      EXTERNAL-IP            PORT(S)                          AGE
+jenkins-service   NodePort       10.109.116.82   <none>                 8080:31774/TCP,50000:31360/TCP   20d
+kubernetes        ClusterIP      10.96.0.1       <none>                 443/TCP                          20d
+my-service        ExternalName   <none>          dbserver.example.com   80/TCP                           4s
+root@controlplanenode:~# 
+root@controlplanenode:~# 
+root@controlplanenode:~# kubectl run --rm -ti test-utils --image=dubareddy/utils -- bash
+If you don't see a command prompt, try pressing enter.
+root@test-utils:/# 
+root@test-utils:/# nslookup my-service
+Server:         10.96.0.10
+Address:        10.96.0.10#53
+
+my-service.default.svc.cluster.local    canonical name = dbserver.example.com.
+
+root@test-utils:/# exit
+exit
+Session ended, resume using 'kubectl attach test-utils -c test-utils -i -t' command when the pod is running
+pod "test-utils" deleted
+root@controlplanenode:~#
