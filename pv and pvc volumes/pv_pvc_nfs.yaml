@@ -79,3 +79,16 @@ spec:
         volumeMounts:
           - mountPath: "/usr/share/nginx/html"  #/var/jenkins_home
             name: task-nfs-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: temp-nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP    #type not needed to pass when ClusterIP
