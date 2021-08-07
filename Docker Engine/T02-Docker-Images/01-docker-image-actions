@@ -1,0 +1,41 @@
+How to check Docker default registy?
+
+root@ubuntuserverdocker:~# docker info | grep "Registry"
+ Registry: https://index.docker.io/v1/
+root@ubuntuserverdocker:~#
+
+How to pull image from Docker Hub repository?
+
+root@ubuntuserverdocker:~# docker pull ubuntu:20.04
+20.04: Pulling from library/ubuntu
+16ec32c2132b: Pull complete
+Digest: sha256:82becede498899ec668628e7cb0ad87b6e1c371cb8a1e597d83a47fac21d6af3
+Status: Downloaded newer image for ubuntu:20.04
+docker.io/library/ubuntu:20.04
+root@ubuntuserverdocker:~# docker image ls
+REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+ubuntu       20.04     1318b700e415   11 days ago   72.8MB
+root@ubuntuserverdocker:~#
+
+How to pull image from specific repository?
+
+For example:
+- we have account created in Docker hub repository and pushed the image to our private repository.
+
+- Lets clone the "ubuntu:20.04" image as "dubareddy/ubuntu:20.04" to push to our specific repository in docker hub.
+Note: dubareddy is my docker hub account name which should be added a prefix
+
+- Before pushing image to our repository, we need to login to the account from CLI and after that push the image by executing below command
+#docker login --> enter username and password
+#docker push dubareddy/ubuntu:20.04
+
+- Login to docker hub dashboard and check if image is pushed.
+
+- Cleanup the images which we have in local docker host to test
+#docker image rm ubuntu:20.04 dubareddy/ubuntu:20.04
+
+- Now pull the image from our private repository
+#docker pull dubareddy/ubuntu:20.04
+
+How to check image details?
+#docker image inspect <Image_Name/Image_ID>
