@@ -41,3 +41,22 @@ CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS  
 22ea673ad8a4   nginx:latest   "/docker-entrypoint.…"   29 seconds ago   Up 28 seconds   0.0.0.0:8090->80/tcp, :::8090->80/tcp   nginx
 root@ubuntuserverdocker:~#
 ```
+
+## How to cleanup all container in proper way by using loop?
+```
+root@ubuntuserverdocker:~# docker ps -a
+CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS                    PORTS     NAMES
+c1e3984ad65f   nginx:latest   "/docker-entrypoint.…"   7 minutes ago   Up About a minute         80/tcp    nginx
+59e642e725d9   ubuntu:20.04   "bash"                   24 hours ago    Up About a minute                   ubuntuserver
+4a4d4c2d3820   nginx:latest   "/docker-entrypoint.…"   24 hours ago    Exited (0) 23 hours ago             nginxserver
+root@ubuntuserverdocker:~#
+root@ubuntuserverdocker:~# docker container ps -aq
+c1e3984ad65f
+59e642e725d9
+4a4d4c2d3820
+root@ubuntuserverdocker:~# for i in `docker container ps -aq`;do docker container stop $i;docker container rm $i;done
+c1e3984ad65f
+c1e3984ad65f
+59e642e725d9
+59e642e725d9
+```

@@ -19,7 +19,7 @@ ubuntu       20.04     1318b700e415   11 days ago   72.8MB
 root@ubuntuserverdocker:~#
 ```
 
-## How to pull image from specific repository?
+## How to pull/push image from specific repository?
 For example:
 - we have account created in Docker hub repository and pushed the image to our private repository.
 
