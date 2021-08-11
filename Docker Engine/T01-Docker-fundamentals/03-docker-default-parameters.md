@@ -1,6 +1,5 @@
-Docker root directory location
-
-===
+## Docker root directory location
+```
 root@ubuntuserverdocker:~# docker info | grep "Docker Root Dir"
  Docker Root Dir: /var/lib/docker
 root@ubuntuserverdocker:~#
@@ -18,11 +17,10 @@ drwx------ 2 root root 4096 Aug  6 12:03 tmp
 drwx------ 2 root root 4096 Aug  3 01:52 trust
 drwx-----x 2 root root 4096 Aug  6 12:03 volumes
 root@ubuntuserverdocker:~#
-===
+```
 
-How to check docker information like total images, no of containers Running,Stopped etc.,
-
-===
+## How to check docker information like total images, no of containers Running,Stopped etc.,
+```
 root@ubuntuserverdocker:~# docker info
 Client:
  Context:    default
@@ -81,19 +79,20 @@ Server:
 
 WARNING: No swap limit support
 root@ubuntuserverdocker:~#
-===
+```
 
-Docker default networks
-
-===
+## Docker default networks
+```
 root@ubuntuserverdocker:~# docker network ls
 NETWORK ID     NAME      DRIVER    SCOPE
 610426a38d7d   bridge    bridge    local
 83779fc34e8c   host      host      local
 86213fd0e35f   none      null      local
 root@ubuntuserverdocker:~#
+```
 
-Below command shows that "docker0" was default bridge network used by containers launched on docker host:
+## Below command shows that "docker0" was default bridge network used by containers launched on docker host:
+```
 root@ubuntuserverdocker:~# ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -112,12 +111,11 @@ root@ubuntuserverdocker:~# ip a
     inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
        valid_lft forever preferred_lft forever
 root@ubuntuserverdocker:~#
-===
+```
 
-Docker default "Storage Driver" on Linux machines:
-
-===
+## Docker default "Storage Driver" on Linux machines:
+```
 root@ubuntuserverdocker:~# docker info | grep "Storage Driver"
  Storage Driver: overlay2
 root@ubuntuserverdocker:~#
-===
+```
