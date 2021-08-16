@@ -74,3 +74,174 @@ root@ubuntuserverdocker:~# ip addr show br-56079a923e63
        valid_lft forever preferred_lft forever
 root@ubuntuserverdocker:~#
 ```
+
+## How to create user specific bridge network with specific CIDR?
+- By default docker uses docker0 bridge network when you launch a container.
+- If we try to create a bridge network without passing any "--subnet" CIDR value. docker will assign its own CIDR to user defined bridge network as mentioned below.
+```
+root@ubuntuserverdocker:~# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+e2c88530b754   bridge    bridge    local
+83779fc34e8c   host      host      local
+86213fd0e35f   none      null      local
+root@ubuntuserverdocker:~# docker network create sudheer
+d3b0b997af6c143e80c11e7818feb76f043f71e28619b04200dabe3c4bcbbba3
+root@ubuntuserverdocker:~# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+e2c88530b754   bridge    bridge    local
+83779fc34e8c   host      host      local
+86213fd0e35f   none      null      local
+d3b0b997af6c   sudheer   bridge    local
+root@ubuntuserverdocker:~# docker network inspect sudheer --format "{{.IPAM.Config}}"
+[{172.18.0.0/16  172.18.0.1 map[]}]
+root@ubuntuserverdocker:~#
+```
+- Lets try to create a user-defined bridge network with CIDR "10.10.0.0/16".
+```
+root@ubuntuserverdocker:~# docker network create --subnet 10.10.0.0/16 --gateway 10.10.0.1 sudheer
+bacdbbb0fe071e4fcce50dc85fb70c5cb39c50945d70466f6a310ab968cdb3e1
+root@ubuntuserverdocker:~# docker network inspect sudheer --format "{{.IPAM.Config}}"
+[{10.10.0.0/16  10.10.0.1 map[]}]
+root@ubuntuserverdocker:~#
+
+Note: Create with same name "sudheer", I have delete the old network before creaing with same name
+```
+
+## How to check if containers running on different network can communicate with each other?
+- Lets try to launch a container name **source-bridge** using default docker0 bridge network.
+```
+root@ubuntuserverdocker:~# docker container run -d --name source-bridge nginx:latest
+3170487babf7891a3bf2a0bf8b301e551bd30d846b847de05f309c1b1349fc80
+root@ubuntuserverdocker:~# docker container inspect source-bridge --format "{{.NetworkSettings.IPAddress}}"
+172.17.0.2
+root@ubuntuserverdocker:~# docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS     NAMES
+3170487babf7   nginx:latest   "/docker-entrypoint.…"   36 seconds ago   Up 35 seconds   80/tcp    source-bridge
+root@ubuntuserverdocker:~#
+```
+- Now lets try to launch another container on user defined network.
+```
+root@ubuntuserverdocker:~# docker network inspect sudheer --format "{{.IPAM.Config}}"
+[{10.10.0.0/16  10.10.0.1 map[]}]
+root@ubuntuserverdocker:~# docker container run -d --name dest-sudheer --network sudheer nginx:latest
+1a6f5627a2753d33bd2f7be1ec44dd18efaf6400f7242e2304a0843879dcef90
+root@ubuntuserverdocker:~# docker container inspect dest-sudheer --format "{{.NetworkSettings.Networks.sudheer.IPAddress}}"
+10.10.0.2
+root@ubuntuserverdocker:~#
+```
+- Now lets check the connectivity between these containers sitting on different network.
+```
+# First login to source-bridge and install iproute2 and iputils-ping package using #apt update && apt install -y iproute2 iputils-ping
+root@ubuntuserverdocker:~# docker exec -ti source-bridge bash
+root@3170487babf7:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+5: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@3170487babf7:/# ping 10.10.0.2
+PING 10.10.0.2 (10.10.0.2) 56(84) bytes of data.
+^C
+--- 10.10.0.2 ping statistics ---
+6 packets transmitted, 0 received, 100% packet loss, time 125ms
+
+root@3170487babf7:/# ping 10.10.0.1
+PING 10.10.0.1 (10.10.0.1) 56(84) bytes of data.
+64 bytes from 10.10.0.1: icmp_seq=1 ttl=64 time=0.068 ms
+64 bytes from 10.10.0.1: icmp_seq=2 ttl=64 time=0.182 ms
+64 bytes from 10.10.0.1: icmp_seq=3 ttl=64 time=0.100 ms
+^C
+--- 10.10.0.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 43ms
+rtt min/avg/max/mdev = 0.068/0.116/0.182/0.049 ms
+root@3170487babf7:/#
+
+# we can see that you are able to reach to gateway of sudheer network but not to container IP 10.10.0.2
+# Optional: check same by login to dest-sudheer conatiner and run ping 172.17.0.2 container "source-bridge"
+```
+
+## How to connect two containers running on different network using "connect" option?
+- We can connect "source-bridge" container to network "sudheer" where "dest-sudheer" container was running.
+```
+root@3170487babf7:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+5: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@3170487babf7:/# exit
+exit
+root@ubuntuserverdocker:~# docker network connect sudheer source-bridge
+root@ubuntuserverdocker:~# docker exec -ti source-bridge bash
+root@3170487babf7:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+5: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+11: eth1@if12: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:0a:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.10.0.3/16 brd 10.10.255.255 scope global eth1
+       valid_lft forever preferred_lft forever
+root@3170487babf7:/# ping 10.10.0.2
+PING 10.10.0.2 (10.10.0.2) 56(84) bytes of data.
+64 bytes from 10.10.0.2: icmp_seq=1 ttl=64 time=0.139 ms
+64 bytes from 10.10.0.2: icmp_seq=2 ttl=64 time=0.179 ms
+64 bytes from 10.10.0.2: icmp_seq=3 ttl=64 time=0.126 ms
+^C
+--- 10.10.0.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 26ms
+rtt min/avg/max/mdev = 0.126/0.148/0.179/0.022 ms
+root@3170487babf7:/#
+```
+
+## How to diconnect a container from specific network?
+- Lets try to disconnect container "source-bridge" from docker0 bridge network.
+```
+root@ubuntuserverdocker:~# docker exec -ti source-bridge bash
+root@3170487babf7:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+5: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+11: eth1@if12: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:0a:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.10.0.3/16 brd 10.10.255.255 scope global eth1
+       valid_lft forever preferred_lft forever
+root@3170487babf7:/# exit
+exit
+root@ubuntuserverdocker:~# docker network disconnect bridge source-bridge
+root@ubuntuserverdocker:~# docker exec -ti source-bridge bash
+root@3170487babf7:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+11: eth1@if12: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:0a:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.10.0.3/16 brd 10.10.255.255 scope global eth1
+       valid_lft forever preferred_lft forever
+root@3170487babf7:/# ping 10.10.0.2
+PING 10.10.0.2 (10.10.0.2) 56(84) bytes of data.
+64 bytes from 10.10.0.2: icmp_seq=1 ttl=64 time=0.067 ms
+64 bytes from 10.10.0.2: icmp_seq=2 ttl=64 time=0.099 ms
+64 bytes from 10.10.0.2: icmp_seq=3 ttl=64 time=0.122 ms
+^C
+--- 10.10.0.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 33ms
+rtt min/avg/max/mdev = 0.067/0.096/0.122/0.022 ms
+root@3170487babf7:/#
+```
