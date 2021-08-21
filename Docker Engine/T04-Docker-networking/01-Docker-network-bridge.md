@@ -245,3 +245,101 @@ PING 10.10.0.2 (10.10.0.2) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.067/0.096/0.122/0.022 ms
 root@3170487babf7:/#
 ```
+
+## How to connect containers on different network to communicate without using "docker network connect"?
+- Earlier we use to conect two containers on different network using #docker network connect option
+- But now without using that, how we can achieve this by manipulating the **iptables**.
+```
+root@ubuntuserverdocker:~# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+29df8af1adf1   bridge    bridge    local
+83779fc34e8c   host      host      local
+86213fd0e35f   none      null      local
+c714511f2001   sudhams   bridge    local
+f77494679518   sudheer   bridge    local
+root@ubuntuserverdocker:~# docker container run -d --name sudheer-bridge --network sudheer nginx:latest
+81709b74d86cd8866be33291b04dc00897be4be680156676d433ef1a44ab4b20
+root@ubuntuserverdocker:~# docker container run -d --name sudhams-bridge --network sudhams nginx:latest
+8e26be20c1444ee08065ce092df4061e863be27691c2666f8abca1b7990dbde0
+root@ubuntuserverdocker:~# docker exec -ti sudheer-bridge bash
+root@81709b74d86c:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+14: eth0@if15: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:0a:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.10.0.2/16 brd 10.10.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@81709b74d86c:/#
+root@81709b74d86c:/# ping 10.20.0.2
+PING 10.20.0.2 (10.20.0.2) 56(84) bytes of data.
+^C
+--- 10.20.0.2 ping statistics ---
+3 packets transmitted, 0 received, 100% packet loss, time 35ms
+
+root@81709b74d86c:/# ping 10.20.0.1
+PING 10.20.0.1 (10.20.0.1) 56(84) bytes of data.
+64 bytes from 10.20.0.1: icmp_seq=1 ttl=64 time=0.058 ms
+64 bytes from 10.20.0.1: icmp_seq=2 ttl=64 time=0.147 ms
+^C
+--- 10.20.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 5ms
+rtt min/avg/max/mdev = 0.058/0.102/0.147/0.045 ms
+root@81709b74d86c:/#
+```
+- Now lets slove the issue to connect containers launched on sudheer network to communicate with sudhams network using **iptabels**.
+- First find the interfaces names of sudheer and sudhams.
+- sudheer bridge --> br-f77494679518 and sudhams --> br-c714511f2001, check using #ip a command on docker host machine
+```
+root@ubuntuserverdocker:~# iptables -I DOCKER-USER -i br-f77494679518 -o br-c714511f2001 -s 10.10.0.2 -d 10.20.0.2 -j ACCEPT
+root@ubuntuserverdocker:~# iptables -I DOCKER-USER -i br-c714511f2001 -o br-f77494679518 -s 10.20.0.2 -d 10.10.0.2 -j ACCEPT
+root@ubuntuserverdocker:~#
+
+# Lets check the connectivity now
+root@ubuntuserverdocker:~# docker exec -ti sudheer-bridge bash
+root@81709b74d86c:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+14: eth0@if15: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:0a:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.10.0.2/16 brd 10.10.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@81709b74d86c:/# ping 10.20.0.2
+PING 10.20.0.2 (10.20.0.2) 56(84) bytes of data.
+64 bytes from 10.20.0.2: icmp_seq=1 ttl=63 time=0.124 ms
+64 bytes from 10.20.0.2: icmp_seq=2 ttl=63 time=0.169 ms
+^C
+--- 10.20.0.2 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 24ms
+rtt min/avg/max/mdev = 0.124/0.146/0.169/0.025 ms
+root@81709b74d86c:/# exit
+exit
+root@ubuntuserverdocker:~#
+
+root@ubuntuserverdocker:~# docker exec -ti sudhams-bridge bash
+root@8e26be20c144:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+16: eth0@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:14:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.20.0.2/16 brd 10.20.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+root@8e26be20c144:/# ping 10.10.0.2
+PING 10.10.0.2 (10.10.0.2) 56(84) bytes of data.
+64 bytes from 10.10.0.2: icmp_seq=1 ttl=63 time=0.053 ms
+64 bytes from 10.10.0.2: icmp_seq=2 ttl=63 time=0.155 ms
+64 bytes from 10.10.0.2: icmp_seq=3 ttl=63 time=0.265 ms
+
+--- 10.10.0.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 6ms
+rtt min/avg/max/mdev = 0.053/0.157/0.265/0.087 ms
+root@8e26be20c144:/#
+```
+
+### Note:
+- iptables -t filter -vL -> TODO

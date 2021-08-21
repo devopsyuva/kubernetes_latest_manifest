@@ -1,10 +1,15 @@
 # Docker host network
+- Docker container’s network stack is not isolated from the Docker host (the container shares the host’s networking namespace), and the container does not get its own IP-address allocated.
 - If containers needs to be exposed using network namespace what docker host will be using, then containers can be launched using host network.
 - In general, containers will have separate namespace for network as well by default for bridge.
 - We have to ensure, why we need to give containers a host network before creating it.
 - Not all application in a containers need host network namespace.
 - Some application might open dynamic port numbers which needs external access to clients. Those application can't use port forwarding.
-- Portwarding works well for static ports not for dynamic ports.
+- Port farwarding works well for static ports not for dynamic ports.
+- Host mode networking can be useful to optimize performance, and in situations where a container needs to handle a large range of ports, as it does not require network address translation (NAT), and no “userland-proxy” is created for each port.
+
+### Note
+- The host networking driver only works on Linux hosts, and is not supported on Docker Desktop for Mac, Docker Desktop for Windows, or Docker EE for Windows Server.
 
 ## How to create a containers with host network?
 - Host network is created by default when docker installed.
@@ -73,3 +78,20 @@ Accept-Ranges: bytes
 
 #it works and no need to do any port forwarding.
 ```
+
+## Can we create additional host network on Docker apart from default "host" network?
+- By Default docker creates a host network stack which is used by default while creating container **--network host**.
+- Docker doesn't allow to create additional host network stack as mentioned below.
+```
+root@ubuntuserverdocker:~# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+a491b8f52b67   bridge    bridge    local
+83779fc34e8c   host      host      local
+86213fd0e35f   none      null      local
+root@ubuntuserverdocker:~# docker network create -d host sudheer
+Error response from daemon: only one instance of "host" network is allowed
+root@ubuntuserverdocker:~#
+```
+
+### References
+- [Host Network](https://docs.docker.com/network/host/)
