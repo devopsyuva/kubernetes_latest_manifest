@@ -276,6 +276,53 @@ Commercial support is available at
 </html>
 root@ubuntuserverdocker:~#
 ```
+## Scenario 5: Lets mount shared volume as read-only to the containers.
+- Benefit of sharing volume mount as read-only to multiple containers is applications/users can't modify the context of mounted path to volume.
+- These helps admin to maintain common data/context to be shared among containers.
+```
+root@ubuntuserverdocker:~# docker container run -d --name nginx-1 -v nginx-backup:/usr/share/nginx/html:ro nginx:latest
+cb02250d233dc940b4ac1d5e3a7213248e3aede9416f94142ec22cb8285f2c3f
+root@ubuntuserverdocker
+root@ubuntuserverdocker:~# docker volume ls
+DRIVER    VOLUME NAME
+local     nginx-backup
+root@ubuntuserverdocker:~# docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS     NAMES
+cb02250d233d   nginx:latest   "/docker-entrypoint.…"   20 seconds ago   Up 19 seconds   80/tcp    nginx-1
+root@ubuntuserverdocker:~# docker container run -d --name nginx-2 -v nginx-backup:/usr/share/nginx/html:ro nginx:latest
+c9863da8eee127243d8cc5f34abe44d8ec84d3a318f4cab47c759a6b417bb6c3
+root@ubuntuserverdocker:~#
+root@ubuntuserverdocker:~# echo "welcome to nginx shared volume as read-only" > /var/lib/docker/volumes/nginx-backup/_data/index.html
+root@ubuntuserverdocker:~# docker exec -ti nginx-1 bash
+root@cb02250d233d:/# echo "Test from nginx-1" > /usr/share/nginx/html/index.html
+bash: /usr/share/nginx/html/index.html: Read-only file system
+root@cb02250d233d:/# exit
+exit
+root@ubuntuserverdocker:~# docker exec -ti nginx-2 bash
+root@c9863da8eee1:/#  echo "Test from nginx-2" > /usr/share/nginx/html/index.html
+bash: /usr/share/nginx/html/index.html: Read-only file system
+root@c9863da8eee1:/# exit
+exit
+root@ubuntuserverdocker:~#
+```
+
+## Scenario 6: Lets use --mount for above one of the example to see the options
+- Option --mount can also be used for using volume mount for containers.
+- This option is mostly preffered and suggested for **Docker Swarm**, since service support only --mount option.
+```
+root@ubuntuserverdocker:~# docker volume ls
+DRIVER    VOLUME NAME
+root@ubuntuserverdocker:~# docker container run -d --name nginx --hostname nginxwebserver --mount type=volume,src=nginx-backup,dst=/usr/share/nginx/html nginx:latest
+3e6bfb51a41eda2f5fea65d8ef258a6038b5090d3ca68c48a3099bc2f210c2ca
+root@ubuntuserverdocker:~# docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS         PORTS     NAMES
+3e6bfb51a41e   nginx:latest   "/docker-entrypoint.…"   5 seconds ago   Up 3 seconds   80/tcp    nginx
+root@ubuntuserverdocker:~#
+root@ubuntuserverdocker:~# docker volume ls
+DRIVER    VOLUME NAME
+local     nginx-backup
+root@ubuntuserverdocker:~#
+```
 
 ### References
 - [Docker Volume Mount](https://docs.docker.com/storage/volumes/)
