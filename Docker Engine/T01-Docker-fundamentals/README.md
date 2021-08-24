@@ -1,4 +1,17 @@
-# Docker Components
+# Docker Principles
+- **Build**
+  - Docker images are efficiently developed for your own unique applications on Windows and Mac. Create your multi container application using the Docker Compose CLI.
+  - Integrate with your favorite tools throughout your development pipeline - Docker works with all development tools you use including VS Code, CircleCI and GitHub.
+  - Package applications as portable container images to run in any environment consistently from on-premises Kubernetes to AWS ECS, Azure ACI, Google GKS and more.
+- **Share**
+  - Leverage with confidence Docker certified and official images from the Docker Hub image repository.  Use these trusted and secure images as the foundation for your application development.
+  - Innovate by collaborating with team members and other developers and by easily publishing images to Docker Hub.
+  - Personalize developer access to images with roles based access control and get insights into activity history with Docker Hub Audit Logs.
+- **Run**
+  - Deliver multiple applications hassle free and have them run the same way on all your environments including design, testing, staging and production - desktop or cloud-native.
+  - Deploy your applications in separate containers independently and in different languages. Reduce the risk of conflict between languages, libraries or frameworks.
+  - Speed development with the simplicity of Docker Compose CLI and with one command, launch your applications locally and on the cloud with AWS ECS, Azure ACI and Google GKS.
+## Docker Components
 - Docker Server
 - Docker CLI
 - Docker Regitry
