@@ -13,7 +13,7 @@
 - Each FROM instruction can use a different base, and each of them begins a new stage of the build.
 - You can selectively copy artifacts from one stage to another, leaving behind everything you don’t want in the final image.
 
-## Scenario 1:
+## Scenario 1 (using Ubuntu Image)
 ```
 FROM ubuntu:20.04
 MAINTAINER "sudhams reddy duba<dubareddy.383@gmail.com>"
@@ -30,7 +30,21 @@ COPY --from=0 /var/website/default.conf /etc/nginx/conf.d
 EXPOSE 8080
 ```
 
-## Scenario 2
+## Scenario 2 (using alpine image)
+```
+FROM alpine
+MAINTAINER "sudhams reddy duba<dubareddy.383@gmail.com>"
+RUN mkdir -p /var/website
+RUN echo "Welcome to Multi-Stage Build Demo from Visualpath" > /var/website/index.html
+COPY default.conf /var/website
+
+FROM nginx:latest
+COPY --from=0 /var/website/index.html /usr/share/nginx/html
+COPY --from=0 /var/website/default.conf /etc/nginx/conf.d
+EXPOSE 8080
+```
+
+## Scenario 3 (advanced and complex)
 ```
 # syntax=docker/dockerfile:1
 FROM golang:1.16

@@ -129,3 +129,77 @@ REPOSITORY         TAG       IMAGE ID       CREATED         SIZE
 dubareddy/ubuntu   20.04     bb0eaf4eee00   10 months ago   72.9MB
 root@ubuntuserverdocker:~#
 ```
+
+## How to cleanup all images layers which are dangling/intermittent?
+- Check image first on the Docker host machine.
+```
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker image ls
+REPOSITORY                   TAG       IMAGE ID       CREATED          SIZE
+dubareddy/nginx-multistage   latest    eecaf089f0c9   15 minutes ago   133MB
+<none>                       <none>    2cf601fb55a4   15 minutes ago   5.6MB
+<none>                       <none>    0f0b586ad999   16 minutes ago   133MB
+<none>                       <none>    be85ac6ccf4b   16 minutes ago   5.6MB
+<none>                       <none>    f68592d14086   18 minutes ago   133MB
+<none>                       <none>    fc8164a0514c   18 minutes ago   5.6MB
+<none>                       <none>    a302fc8cf39d   23 minutes ago   72.8MB
+nginx                        latest    dd34e67e3371   7 days ago       133MB
+mysql                        5.7       6c20ffa54f86   7 days ago       448MB
+alpine                       latest    021b3423115f   2 weeks ago      5.6MB
+portainer/portainer-ce       latest    dfac2df13044   3 weeks ago      210MB
+jenkins/jenkins              lts       3b4ec91827f2   3 weeks ago      568MB
+ubuntu                       20.04     1318b700e415   4 weeks ago      72.8MB
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage#
+```
+- Now clean them using prune option.
+```
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker image prune
+WARNING! This will remove all dangling images.
+Are you sure you want to continue? [y/N] y
+Deleted Images:
+...
+...
+Total reclaimed space: 5.693kB
+```
+- Lets check the image list now.
+```
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker image ls
+REPOSITORY                   TAG       IMAGE ID       CREATED          SIZE
+dubareddy/nginx-multistage   latest    eecaf089f0c9   16 minutes ago   133MB
+nginx                        latest    dd34e67e3371   7 days ago       133MB
+mysql                        5.7       6c20ffa54f86   7 days ago       448MB
+alpine                       latest    021b3423115f   2 weeks ago      5.6MB
+portainer/portainer-ce       latest    dfac2df13044   3 weeks ago      210MB
+jenkins/jenkins              lts       3b4ec91827f2   3 weeks ago      568MB
+ubuntu                       20.04     1318b700e415   4 weeks ago      72.8MB
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage#
+```
+
+## How to remove all unused images?
+```
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker ps
+CONTAINER ID   IMAGE                    COMMAND        CREATED        STATUS             PORTS                                                                                  NAMES
+d00d8bda5c37   portainer/portainer-ce   "/portainer"   25 hours ago   Up About an hour   0.0.0.0:8000->8000/tcp, :::8000->8000/tcp, 0.0.0.0:9000->9000/tcp, :::9000->9000/tcp   portainer
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage#
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker image ls
+REPOSITORY                   TAG       IMAGE ID       CREATED          SIZE
+dubareddy/nginx-multistage   latest    eecaf089f0c9   20 minutes ago   133MB
+nginx                        latest    dd34e67e3371   7 days ago       133MB
+mysql                        5.7       6c20ffa54f86   7 days ago       448MB
+alpine                       latest    021b3423115f   2 weeks ago      5.6MB
+portainer/portainer-ce       latest    dfac2df13044   3 weeks ago      210MB
+jenkins/jenkins              lts       3b4ec91827f2   3 weeks ago      568MB
+ubuntu                       20.04     1318b700e415   4 weeks ago      72.8MB
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage#
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker image prune -a [-f --> Do not prompt for confirmation]
+WARNING! This will remove all images without at least one container associated to them.
+Are you sure you want to continue? [y/N] y
+...
+...
+Total reclaimed space: 1.159GB
+
+#Now lets the list of images avaiables and which are used by containers running like portainer example.
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage# docker image ls
+REPOSITORY               TAG       IMAGE ID       CREATED       SIZE
+portainer/portainer-ce   latest    dfac2df13044   3 weeks ago   210MB
+root@ubuntuserverdocker:~/image-dockerfiles/multi-stage#
+```
