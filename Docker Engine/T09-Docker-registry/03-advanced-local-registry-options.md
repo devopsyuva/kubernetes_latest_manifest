@@ -1,5 +1,5 @@
-Generate certificates using below command:
-
+- Generate certificates using below command:
+```
 mkdir $HOME/certs
 cd certs
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=192.168.0.48"
@@ -37,22 +37,25 @@ openssl req  -x509 -newkey rsa:4096 -days 365 -config openssl.conf  -keyout tls.
 Command to verify certs genrated above:
 
 openssl x509 -in certs/tls.crt -text -noout
+```
 
-
+- update daemon.json file to accept domain and IP address
+```
 root@ubuntuserver:~/certs# cat /etc/docker/daemon.json 
 {
   "insecure-registries": ["192.168.1.100:443", "dockerserver:443"]
 }
 root@ubuntuserver:~/certs#
+```
 
-restart docker using #systemctl restart docker
+- restart docker using #systemctl restart docker
 
-Instruct every Docker daemon to trust that certificate. The way to do this depends on your OS.
+- Instruct every Docker daemon to trust that certificate. The way to do this depends on your OS.
 
-Linux: Copy the domain.crt file to cmyregistrydomain.com:5000/ca.crt on every Docker host. You do not need to restart Docker.
+- Linux: Copy the domain.crt file to cmyregistrydomain.com:5000/ca.crt on every Docker host. You do not need to restart Docker.
 
-Sample example:
-
+- Sample example:
+```
 root@dockerserver:~# docker push dockerserver:443/nginx:1.19.0 
 The push refers to repository [dockerserver:443/nginx]
 Get https://dockerserver:443/v2/: x509: certificate signed by unknown authority
@@ -89,10 +92,10 @@ REPOSITORY               TAG                 IMAGE ID            CREATED        
 registry                 2                   2d4f4b5309b1        4 weeks ago         26.2MB
 dockerserver:443/nginx   <none>              2622e6cca7eb        5 weeks ago         132MB
 root@dockerserver:~# 
+```
 
-
-Create local registry using Docker Engine:
-==========================================
+- Create local registry using Docker Engine:
+```
 docker run -d \
   --restart=always \
   --name registry \
@@ -103,9 +106,10 @@ docker run -d \
   -e REGISTRY_HTTP_TLS_KEY=/certs/tls.key \
   -p 443:443 \
   registry:2
+```
 
-Docker compose method:
-======================
+- Docker compose method:
+```
 version: '3.0'
 
 services:
@@ -127,12 +131,11 @@ services:
 
 volumes:
   docker-registry-data: {}
+```
 
-
-Docker htpasswd authetication from CLI:
-=======================================
-Create a password file with one entry for the user testuser, with password testpassword:
-
+- Docker htpasswd authetication from CLI:
+  - Create a password file with one entry for the user testuser, with password testpassword:
+```
 $ mkdir auth
 $ docker run \
   --entrypoint htpasswd \
@@ -156,15 +159,17 @@ $ docker run -d \
   -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/tls.crt \
   -e REGISTRY_HTTP_TLS_KEY=/certs/tls.key \
   registry:2
-Try to pull an image from the registry, or push an image to the registry. These commands fail.
+```
+- Try to pull an image from the registry, or push an image to the registry. These commands fail.
 
-Log in to the registry.
-
+- Log in to the registry.
+```
 $ docker login myregistrydomain.com:5000
 Provide the username and password from the first step.
+```
 
-Docker compose file with htpasswd authentication:
-=================================================
+- Docker compose file with htpasswd authentication:
+```
 version: '3.0'
 
 services:
@@ -189,31 +194,21 @@ services:
 
 volumes:
   docker-registry-data: {}
+```
 
-sudo docker inspect -f "{{ .NetworkSettings.IPAddress }}" Container_Name
-
-Reference:
-https://docs.docker.com/registry/insecure/
-certs --> https://www.sslshopper.com/article-most-common-openssl-commands.html
-
-
-
-
+- sudo docker inspect -f "{{ .NetworkSettings.IPAddress }}" Container_Name
+```
 docker run -d --restart=always --name registry -v "$(pwd)"/certs:/certs -v docker-registry:/var/lib/registry -e REGISTRY_HTTP_ADDR=0.0.0.0:443 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/tls.crt -e REGISTRY_HTTP_TLS_KEY=/certs/tls.key -p 443:443 registry:2
+```
 
-
-Some of environment variables of docker local registry:
-
+- Some of environment variables of docker local registry:
+```
 REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/somewhere
  -v `pwd`/config.yml:/etc/docker/registry/config.yml
- 
+```
 
-
-Docker mirror registry:
-=======================
-
-https://github.com/moby/moby/blob/v1.6.2/docs/sources/articles/registry_mirror.md
-
-openssl:
-========
-https://phoenixnap.com/kb/openssl-tutorial-ssl-certificates-private-keys-csrs
+### Reference:
+- https://docs.docker.com/registry/insecure/
+- [certs](https://www.sslshopper.com/article-most-common-openssl-commands.html)
+- [Docker mirror registry](https://github.com/moby/moby/blob/v1.6.2/docs/sources/articles/registry_mirror.md)
+- [openssl](https://phoenixnap.com/kb/openssl-tutorial-ssl-certificates-private-keys-csrs)

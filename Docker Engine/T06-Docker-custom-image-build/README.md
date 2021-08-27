@@ -22,3 +22,6 @@
   - tested: Run unit and intigration tests with Jenkins.
   - reviewed: Digitally sign images.
   - verified: Ensure only signed images can run.
+
+### TODO
+- https://ahmet.im/blog/minimal-init-process-for-containers/

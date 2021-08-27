@@ -26,7 +26,133 @@ services:
 
 volumes:
   jenkins_data: {}
+
+```
+root@ubuntuserverdocker:~/compose-files# cat docker-compose.yaml
+version: "3"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    volumes:
+      - jenkins_data:/var/jenkins_home
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+  nginx:
+    image: nginx:1.19.0
+    container_name: nginx
+    volumes:
+      - nginx-backup:/usr/share/nginx/html
+    ports:
+      - "8091:80"
+    environment:
+      MYSQL_ROOT_PASSWORD: "test123"
+
+volumes:
+  jenkins_data: {}
+  nginx-backup: {}
 ---
+root@ubuntuserverdocker:~/compose-files# docker-compose up -d
+Creating network "compose-files_default" with the default driver
+Creating volume "compose-files_jenkins_data" with default driver
+Creating volume "compose-files_nginx-backup" with default driver
+Pulling jenkins (jenkins/jenkins:lts)...
+lts: Pulling from jenkins/jenkins
+4c25b3090c26: Pull complete
+750d566fdd60: Pull complete
+2718cc36ca02: Pull complete
+5678b027ee14: Pull complete
+c839cd2df78d: Pull complete
+50861a5addda: Pull complete
+ff2b028e5cf5: Pull complete
+ee710b58f452: Pull complete
+2625c929bb0e: Pull complete
+6a6bf9181c04: Pull complete
+bee5e6792ac4: Pull complete
+6cc5edd2133e: Pull complete
+c07b16426ded: Pull complete
+e9ac42647ae3: Pull complete
+fa925738a490: Pull complete
+4a08c3886279: Pull complete
+2d43fec22b7e: Pull complete
+Digest: sha256:a942c30fc3bcf269a1c32ba27eb4a470148eff9aba086911320031a3c3943e6c
+Status: Downloaded newer image for jenkins/jenkins:lts
+Pulling nginx (nginx:1.19.0)...
+1.19.0: Pulling from library/nginx
+8559a31e96f4: Pull complete
+8d69e59170f7: Pull complete
+3f9f1ec1d262: Pull complete
+d1f5ff4f210d: Pull complete
+1e22bfa8652e: Pull complete
+Digest: sha256:21f32f6c08406306d822a0e6e8b7dc81f53f336570e852e25fbe1e3e3d0d0133
+Status: Downloaded newer image for nginx:1.19.0
+Creating jenkins ... done
+Creating nginx   ... done
+root@ubuntuserverdocker:~/compose-files#
+```
+
+How to call all resources created by docker-compose?
+```
+root@ubuntuserverdocker:~/compose-files/2-tier-app# cat docker-compose.yml
+version: '3.3'
+
+services:
+   db:
+     image: mysql:5.7
+     volumes:
+       - mysql_data:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: test12345
+       MYSQL_DATABASE: wordpress
+       MYSQL_USER: wordpress
+       MYSQL_PASSWORD: wordpress
+       MYSQL_ROOT_HOST: "%"
+
+   nginx:
+     image: nginx:latest
+     container_name: nginxserver
+     restart: always
+     healthcheck:
+       test: ["CMD", "curl", "-f", "http://localhost"]
+       start_period: 20s
+       interval: 30s
+       timeout: 10s
+       retries: 5
+
+   wordpress:
+     depends_on:
+       - db
+       - nginx
+     image: wordpress:latest
+     ports:
+       - "8092:80"
+     restart: always
+     environment:
+       WORDPRESS_DB_HOST: db:3306
+       WORDPRESS_DB_USER: wordpress
+       WORDPRESS_DB_PASSWORD: wordpress
+       WORDPRESS_DB_NAME: wordpress
+volumes:
+    mysql_data: {}
+---
+root@ubuntuserverdocker:~/compose-files/2-tier-app# docker-compose down --rmi all -v
+Stopping 2-tier-app_wordpress_1 ... done
+Stopping nginxserver            ... done
+Stopping 2-tier-app_db_1        ... done
+Removing 2-tier-app_wordpress_1 ... done
+Removing nginxserver            ... done
+Removing 2-tier-app_db_1        ... done
+Removing network 2-tier-app_default
+Removing volume 2-tier-app_mysql_data
+Removing image mysql:5.7
+Removing image nginx:latest
+Removing image wordpress:latest
+root@ubuntuserverdocker:~/compose-files/2-tier-app#
+```
+
 version: '3'
 
 services:
