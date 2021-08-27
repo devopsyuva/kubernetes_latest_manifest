@@ -207,6 +207,94 @@ REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/somewhere
  -v `pwd`/config.yml:/etc/docker/registry/config.yml
 ```
 
+## How to use authentication and secure communication to local registry
+```
+root@ubuntuserverdocker:~# cat /etc/docker/daemon.json
+{
+  "insecure-registries": ["192.168.1.50:443", "ubuntuserverdocker:443"]
+}
+root@ubuntuserverdocker:~#
+root@ubuntuserverdocker:~# mkdir auth
+root@ubuntuserverdocker:~# docker run --entrypoint htpasswd httpd:2 -Bbn sudheer test1234 > auth/htpasswd
+root@ubuntuserverdocker:~# cat auth/htpasswd
+sudheer:$2y$05$.btBjF1LwN1DPSyX6AxDYOR8mfEa8Nf8Bpt6PtXNCUTm0EDuCfb4a
+
+root@ubuntuserverdocker:~# ls -l certs/
+total 8
+-rw-r--r-- 1 root root 1139 Aug 27 11:38 tls.crt
+-rw------- 1 root root 1704 Aug 27 11:38 tls.key
+root@ubuntuserverdocker:~# docker run -d -p 443:443 --restart=always --name registry -v "$(pwd)"/auth:/auth -e "REGISTRY_AUTH=htpasswd" -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd -v "$(pwd)"/certs:/certs -e REGISTRY_HTTP_ADDR=0.0.0.0:443 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/tls.crt -e REGISTRY_HTTP_TLS_KEY=/certs/tls.key registry:2
+167cee70b61c2ef06191342b026ee6c50aff3ba62d11f34c308875b34ce4b70e
+root@ubuntuserverdocker:~#
+root@ubuntuserverdocker:~# docker ps
+CONTAINER ID   IMAGE        COMMAND                  CREATED         STATUS         PORTS                                             NAMES
+167cee70b61c   registry:2   "/entrypoint.sh /etc…"   4 seconds ago   Up 2 seconds   0.0.0.0:443->443/tcp, :::443->443/tcp, 5000/tcp   registry
+root@ubuntuserverdocker:~#
+
+root@ubuntuserverdocker:~# docker image ls
+REPOSITORY                              TAG       IMAGE ID       CREATED        SIZE
+httpd                                   2         c8ca530172a8   10 days ago    138MB
+registry                                2         1fd8e1b0bb7e   4 months ago   26.2MB
+localhost:5000/jenkins-local            lts       1fd8e1b0bb7e   4 months ago   26.2MB
+ubuntuserverdocker:5000/jenkins-local   lts       1fd8e1b0bb7e   4 months ago   26.2MB
+root@ubuntuserverdocker:~# docker image tag localhost:5000/jenkins-local:lts ubuntuserverdocker:443/jenkins-local:latest
+root@ubuntuserverdocker:~# docker image ls
+REPOSITORY                              TAG       IMAGE ID       CREATED        SIZE
+httpd                                   2         c8ca530172a8   10 days ago    138MB
+registry                                2         1fd8e1b0bb7e   4 months ago   26.2MB
+localhost:5000/jenkins-local            lts       1fd8e1b0bb7e   4 months ago   26.2MB
+ubuntuserverdocker:443/jenkins-local    latest    1fd8e1b0bb7e   4 months ago   26.2MB
+ubuntuserverdocker:5000/jenkins-local   lts       1fd8e1b0bb7e   4 months ago   26.2MB
+root@ubuntuserverdocker:~#
+root@ubuntuserverdocker:~# docker login ubuntuserverdocker:443
+Username: sudheer
+Password:
+WARNING! Your password will be stored unencrypted in /root/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+root@ubuntuserverdocker:~# cat .docker/config.json
+{
+        "auths": {
+                "ubuntuserverdocker:443": {
+                        "auth": "c3VkaGVlcjp0ZXN0MTIzNA=="
+                }
+        }
+}root@ubuntuserverdocker:~# docker push ubuntuserverdocker:443/jenkins-local:latest
+The push refers to repository [ubuntuserverdocker:443/jenkins-local]
+7b9a3910f3c3: Pushed
+3764c3e89288: Pushed
+b4592cba0628: Pushed
+de9819405bcf: Pushed
+9a5d14f9f550: Pushed
+latest: digest: sha256:42043edfae481178f07aa077fa872fcc242e276d302f4ac2026d9d2eb65b955f size: 1363
+root@ubuntuserverdocker:~#
+
+#Now lets logout and check if we can push the image to secure repository
+root@ubuntuserverdocker:~# cat .docker/config.json
+{
+        "auths": {
+                "ubuntuserverdocker:443": {
+                        "auth": "c3VkaGVlcjp0ZXN0MTIzNA=="
+                }
+        }
+}root@ubuntuserverdocker:~# dockerlogout ubuntuserverdocker:443
+Removing login credentials for ubuntuserverdocker:443
+root@ubuntuserverdocker:~# cat .docker/config.json
+{
+        "auths": {}
+}root@ubuntuserverdocker:~#docker push ubuntuserverdocker:443/jenkins-local:latest
+The push refers to repository [ubuntuserverdocker:443/jenkins-local]
+7b9a3910f3c3: Preparing
+3764c3e89288: Preparing
+b4592cba0628: Preparing
+de9819405bcf: Preparing
+9a5d14f9f550: Preparing
+no basic auth credentials
+root@ubuntuserverdocker:~#
+```
+
 ### Reference:
 - https://docs.docker.com/registry/insecure/
 - [certs](https://www.sslshopper.com/article-most-common-openssl-commands.html)
