@@ -13,9 +13,6 @@ spec:
       name: http
       protocol: TCP
       hostPort: 8090
-  nodeName: workerone
-  nodeSelector:
-    test-server-node: enabled
 ---
 apiVersion: v1
 kind: Pod
