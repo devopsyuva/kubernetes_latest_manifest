@@ -1,7 +1,6 @@
-Initial setup on k8s nodes:
-
-Please execute below commands on all nodes used for kubernetes cluster.
-
+## Initial setup on k8s nodes:
+- Please execute below commands on all nodes used for kubernetes cluster.
+```
 containerd:
 
 cat > /etc/modules-load.d/containerd.conf <<EOF
@@ -20,10 +19,12 @@ net.bridge.bridge-nf-call-ip6tables = 1
 EOF
 
 sysctl --system
+```
 
-# (Install containerd)
-## Set up the repository
-### Install packages to allow apt to use a repository over HTTPS
+## (Install containerd)
+- Set up the repository
+- Install packages to allow apt to use a repository over HTTPS
+```
 apt-get update && apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 
 ## Add Docker’s official GPG key
@@ -44,60 +45,62 @@ containerd config default > /etc/containerd/config.toml
 
 # Restart containerd
 systemctl restart containerd
+```
 
+## k8s control node bootstrap using kubeadm:
 
-k8s control node bootstrap using kubeadm:
-
-On all nodes:
-
+- On all nodes:
+```
 sudo apt-get install -y kubelet kubeadm kubectl
-
 sudo apt-mark hold kubelet kubeadm kubectl
+```
 
-
-On control nodes (k8s master node):
-
+- On control nodes (k8s master node):
+```
 kubeadm init --apiserver-advertise-address=10.128.0.3 --cri-socket=/run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
 
+- calico network for kubernetes CNI
+```
 kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-
 wget https://docs.projectcalico.org/manifests/custom-resources.yaml
+```
+- Note:
+  - Since I am using subnet for POD as 10.244.0.0/16 instead of default 192.168.0.0/16 which will conflict with my nodes ip address. First I downloaded custom-resources.yaml file and updates below parameter.
+  - cidr: 10.244.0.0/16
+  - please read calico project details for more info --> https://docs.projectcalico.org/getting-started/kubernetes/quickstart
 
-Since I am using subnet for POD as 10.244.0.0/16 instead of default 192.168.0.0/16 which will conflict with my nodes ip address. First I downloaded custom-resources.yaml file and updates below parameter.
-
-cidr: 10.244.0.0/16
-
-Refernces: please read calico project details for more info --> https://docs.projectcalico.org/getting-started/kubernetes/quickstart
-
+```
 kubectl apply -f custom-resources.yaml 
+```
 
-On worker nodes to join the cluster:
-
-See the output of kubeadm init command after successfull. It will print kubeadm join command output to be executed on worker nodes:
-
+- On worker nodes to join the cluster:
+  - See the output of kubeadm init command after successfull. It will print kubeadm join command output to be executed on worker nodes:
+```
 For example:
 
 kubeadm join 10.128.0.3:6443 --token wt98bb.4gsf0qqicl5vg0gm \
         --discovery-token-ca-cert-hash sha256:1c4bc8d73e4d45e78569ff3644e67b75946289cb41adecb26cedafb0608df64f 
+```
 
-On contol node:
-
+- On contol node:
+```
 Now check all the pods deployed using kubeadm are running, before checking the node status:
 
 kubectl get pods --all-namespaces
+```
 
-
-Note: By default control node will not be able to launch the pod, so to enable execute below command:
-
+  - Note: By default control node will not be able to launch the pod, so to enable execute below command:
+```
 kubectl taint nodes --all node-role.kubernetes.io/master-
+```
 
-
-cli tool to manage CRI like containerd, cri-o etc.,
-
+- cli tool to manage CRI like containerd, cri-o etc.,
+```
 root@containerdmanager:~/pods# cat /etc/crictl.yaml
 runtime-endpoint: unix:///run/containerd/containerd.sock
 image-endpoint: unix:///run/containerd/containerd.sock
@@ -136,10 +139,10 @@ b47a7c9983129       2 hours ago         Ready               calico-typha-7cf64cf
 eed86b358faa2       2 hours ago         Ready               kube-scheduler-containerdmanager            kube-system         0
 ae5737f24c28b       2 hours ago         Ready               etcd-containerdmanager                      kube-system         0
 root@containerdmanager:~/pods#
+```
 
-
-If you want to create pod with crictl client, please follow the steps below:
-
+- If you want to create pod with crictl client, please follow the steps below:
+```
 $ cat pod-config.json
 {
     "metadata": {
@@ -157,8 +160,8 @@ $ crictl runp pod-config.json
 f84dd361f8dc51518ed291fbadd6db537b0496536c1d2d6c05ff943ce8c9a54f
 
 $ crictl pods
+```
 
-Refernces:
-https://github.com/kubernetes-sigs/cri-tools/blob/master/docs/crictl.md
-
-https://kubernetes.io/blog/2018/05/24/kubernetes-containerd-integration-goes-ga/
+## Refernces:
+- [crictl](https://github.com/kubernetes-sigs/cri-tools/blob/master/docs/crictl.md)
+- [containerd](https://kubernetes.io/blog/2018/05/24/kubernetes-containerd-integration-goes-ga/)
