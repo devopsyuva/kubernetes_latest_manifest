@@ -14,12 +14,12 @@ spec:
       mountPath: /usr/share/nginx/html/index.html
       subPath: index.html
   volumes:
-    - name: www
-      downwardAPI:
-        items:
-          - path: "index.html"
-              fieldRef:
-                fieldPath: metadata.name
+  - name: www
+    downwardAPI:
+      items:
+      - path: "index.html"
+        fieldRef:
+          fieldPath: metadata.name
 ---
 apiVersion: v1
 kind: Pod

@@ -52,13 +52,12 @@ spec:
     volumeMounts:
     - name: nginx-storage
       mountPath: /usr/share/nginx/html
-      subPath: html
     ports:
       - containerPort: 80
   - name: ubuntu
     image: ubuntu:18.04
     command: ["/bin/bash"]
-    args: ["-c", "sleep 200"]
+    args: ["-c", "while true; do date >> /var/tmp/index.html; sleep 10;done"] #["-c", "sleep 200"]
     volumeMounts:
     - name: nginx-storage
       mountPath: /var/tmp
