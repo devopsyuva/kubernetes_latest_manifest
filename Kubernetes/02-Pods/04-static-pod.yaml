@@ -4,7 +4,7 @@
 #/etc/kubelet.d/static-web.yaml and update path to kubelet service
 # Run this command on the node where kubelet is running
 #mkdir /etc/kubelet.d/
-#cat <<EOF >/etc/kubelet.d/static-web.yaml
+#cat /etc/kubelet.d/static-web.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -20,8 +20,7 @@ spec:
         - name: web
           containerPort: 80
           protocol: TCP
-EOF
 #Open the service file under "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
 #add entry as mentioned below
---pod-manifest-path=/etc/kubelet.d/
+#--pod-manifest-path=/etc/kubelet.d/
 #Check README.md file from here
