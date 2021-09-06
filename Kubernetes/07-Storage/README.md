@@ -76,6 +76,10 @@ Files or directories created with HostPath on the host are only writable by root
 
 You should NOT use hostPath volume type for StatefulSets
 
-References:
-https://docs.openshift.com/container-platform/3.5/install_config/storage_examples/ceph_rbd_dynamic_example.html
-https://docs.openshift.com/container-platform/4.4/storage/persistent_storage/persistent-storage-local.html
+### References:
+- [Storage](https://kubernetes.io/docs/concepts/storage/)
+- [Volumes](https://kubernetes.io/docs/concepts/storage/volumes/)
+- [Persistant Volume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
+- [Storage Classes](https://kubernetes.io/docs/concepts/storage/storage-classes/)
+- https://docs.openshift.com/container-platform/3.5/install_config/storage_examples/ceph_rbd_dynamic_example.html
+- https://docs.openshift.com/container-platform/4.4/storage/persistent_storage/persistent-storage-local.html

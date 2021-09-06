@@ -1,4 +1,7 @@
 ## Initial setup on k8s nodes:
+
+![Docker and Containerd](https://d33wubrfki0l68.cloudfront.net/6b4290afef76cad8a084292cd1b5e468e31c9bb3/c26ce/images/blog/2018-05-24-kubernetes-containerd-integration-goes-ga/cri-containerd.png)
+
 - Please execute below commands on all nodes used for kubernetes cluster.
 ```
 containerd:
@@ -165,3 +168,4 @@ $ crictl pods
 ## Refernces:
 - [crictl](https://github.com/kubernetes-sigs/cri-tools/blob/master/docs/crictl.md)
 - [containerd](https://kubernetes.io/blog/2018/05/24/kubernetes-containerd-integration-goes-ga/)
+- [Docker and Containerd](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/check-if-dockershim-deprecation-affects-you/)
