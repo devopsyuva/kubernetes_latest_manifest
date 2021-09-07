@@ -169,5 +169,16 @@ spec:
 - ![initContainers](./03-pod-initContainers.yaml)
 
 ## For Static POD creation, check "04-static-pod.yaml" file
-## To run Jenkins CICD on cluster, check "19-Jenkins.yaml" file
+
+## For POD volumes, please go through folder "05-pod-volunmes"
+- ![emptydir](./05-pod-volumes/01-emptyDir.yaml)
+- ![hostpath](./05-pod-volumes/02-hostPath.yaml)
+- ![nfs](./05-pod-volumes/03-nfs.yaml)
+- ![downwardapi](./05-pod-volumes/04-downwardapi.yaml) etc.,
+
+## To run Jenkins CICD on cluster, check "19-Jenkins.yaml" file which uses NFS as volume.
+- Before deploying jenkins, how to install and configure NFS server? please check ![18-NFS-server-configuration.md](./05-pod-volumes/nfs-server-setup.md)
+- After successful configuration, install sample application as POD to use NFS volume ![NFS](./05-pod-volumes/03-nfs.yaml).
+- Now you can test for Jenkins CICD application, please refer ![Jenkins](./19-jenkins-CICD.yaml)
+
 ## To restrict resource consumption by containers in a POD, please refer "08-container-resources.yaml" file

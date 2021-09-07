@@ -1,0 +1,58 @@
+# POD volume definition with NFS filesystem apparoach
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx-storage
+      mountPath: /usr/share/nginx/html
+    ports:
+      - containerPort: 80
+  - name: ubuntu
+    image: ubuntu:18.04
+    command: ["/bin/bash"]
+    args: ["-c", "while true; do date >> /var/tmp/index.html; sleep 10;done"]
+    volumeMounts:
+    - name: nginx-storage
+      mountPath: /var/tmp
+  volumes:
+  - name: nginx-storage
+    nfs:
+      path: <NFS_Exported_Path>
+      server: <NFS_Server_IP>
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container-pod # Name of our pod
+spec:
+  volumes:
+    - name: html # Creating a shared volume for my containers
+      nfs:
+        server: 192.168.1.110 # Please change this to your NFS server
+        path: /baskups # Please change this to the relevant share
+  containers:
+    - name: 1st
+      image: nginx
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      ports:
+        - name: http
+          hostPort: 8090
+          containerPort: 80
+    - name: 2nd
+      image: debian
+      volumeMounts:
+        - name: html
+          mountPath: /html
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do
+          date >> /html/index.html;
+          sleep 5;
+          done

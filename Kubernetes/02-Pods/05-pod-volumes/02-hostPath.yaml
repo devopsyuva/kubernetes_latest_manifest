@@ -1,0 +1,26 @@
+# POD volume definition with hostPath approach
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx-storage
+      mountPath: /usr/share/nginx/html
+    ports:
+      - containerPort: 80
+  - name: ubuntu
+    image: ubuntu:18.04
+    command: ["/bin/bash"]
+    args: ["-c", "while true; do date >> /var/tmp/index.html; sleep 10;done"] #["-c", "sleep 200"]
+    volumeMounts:
+    - name: nginx-storage
+      mountPath: /var/tmp
+  volumes:
+  - name: nginx-storage
+    hostPath:
+      path: /var/tmp/nginx-data
+      type: DirectoryOrCreate #Directory, FileOrCreate, File, Socket, CharDevice, BlockDevice
