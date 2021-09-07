@@ -30,6 +30,8 @@
     - overlay
     - macvlan
 
+![Docker Flow](./src/images/docker-flow.png)
+
 ## Docker Server
 **Docker server/daemon** is a service that runs in the background to handle the request from CLI/API to create a object for application deployment.
 ```
