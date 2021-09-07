@@ -1,3 +1,21 @@
+# With this approach, we can access/test application with the cluster from any node
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+      name: http
+      protocol: TCP
+---
+# With this approach, we can access/test application from outside the cluster http://node-ip:8090
+# node-ip is IP address(Public) of the node where POD was running
 apiVersion: v1
 kind: Pod
 metadata:

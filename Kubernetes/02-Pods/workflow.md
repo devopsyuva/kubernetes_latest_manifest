@@ -1,3 +1,5 @@
+**This Page will guide and show how to understand about POD and each topic with different examples**
+
 ## How to create a POD using CLI (imperative)
 ```
 root@controlplane:~# kubectl run nginx --image=nginx:1.19.0 --restart=Always --labels="app=nginx,environment=dev" --port=80 --dry-run=client -o yaml
@@ -59,6 +61,7 @@ root@controlplane:~#
 
 ## How to create a POD using YAML (declarative)
 - Now lets see how we can define out desired state of the POD by defining YAML and create it.
+- Refer topic "01-sample-nginx.yaml" file for more examples
 ```
 #YAML file to create POD with single container
 root@controlplane:~# cat pods/nginx.yaml 
@@ -156,8 +159,15 @@ spec:
 #check connection as mentioned above http://node-ip:8090
 ```
 
-## For Multi-container POD, please refer "02-multi-container.yaml" file.
-## For Static POD creation, check "04-static-pod.yaml" file
-## To run Jenkins CICD on cluster, check "19-Jenkins.yaml"
-## To restrict resource consumption by containers in a POD, please refer "08-container-resources.yaml"
+## For Multi-container POD that needs to work together, please refer "02-multi-container.yaml" file.
+- This examples shows how a POD will share storage/volume and uses common network namespace of POD running with multiple containers.
+- Both the containers in the example will use only network namespace of a POD, for which containers will communicate on localhost.
+- ![multi-container POD](./02-multi-container.yaml)
 
+## How to create initContainers in a POD, refer "03-pod-initContainers.yaml" file
+- initContainers helps to initialize tasks that are necessary for main containers to run without any issue.
+- ![initContainers](./03-pod-initContainers.yaml)
+
+## For Static POD creation, check "04-static-pod.yaml" file
+## To run Jenkins CICD on cluster, check "19-Jenkins.yaml" file
+## To restrict resource consumption by containers in a POD, please refer "08-container-resources.yaml" file

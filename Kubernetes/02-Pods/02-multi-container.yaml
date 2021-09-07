@@ -1,11 +1,12 @@
+# This YAML examples helps to understand about multi-container in POD
 apiVersion: v1
 kind: Pod
 metadata:
   name: multi-container-pod # Name of our pod
 spec:
   volumes:
-  - name: shared-date-logs  # Creating a shared volume for my containers
-    emptyDir: {}            # On node where POD was assigned, /var/lib/kubelet/<pod-uid>/volumes
+  - name: shared-date-logs  # Creating a shared volume for my containers "container-writing-dates" and "container-serving-dates"
+    emptyDir: {}            # On node where POD was assigned, this directory will be used for shared volume /var/lib/kubelet/<pod-uid>/volumes
   containers:
   - name: container-writing-dates # Name of first container
     image: alpine # Image to use for first container

@@ -1,3 +1,5 @@
+# In this example, initContainer will fetch index.html file for nginx container to serve the data
+# initContainer will show status as completed once job/task was successful done. So these initContainers should be assigned with any restart policy with Always
 apiVersion: v1
 kind: Pod
 metadata:
@@ -29,6 +31,7 @@ spec:
   - name: workdir
     emptyDir: {}  #emtryDir data will be stored on worker node under /var/lib/kubelet/pods/ with ID which can be picked from pod description
 ---
+# Another example, which is simple to understand for basic scenario
 apiVersion: v1
 kind: Pod
 metadata:
