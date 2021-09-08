@@ -1,6 +1,17 @@
-## Initial setup on k8s nodes:
+# kubernetes setup with containerd as CRI
 
-![Docker and Containerd](https://d33wubrfki0l68.cloudfront.net/6b4290afef76cad8a084292cd1b5e468e31c9bb3/c26ce/images/blog/2018-05-24-kubernetes-containerd-integration-goes-ga/cri-containerd.png)
+## System Specification:
+- OS: Ubuntu 20.04 LTS server
+- RAM: 4GB or more
+- Disk: 30GB+
+- CPU: 2 core or more
+- Swap Memory: Diable
+- Two nodes: VirtualBox was used to launch both nodes(Master Hostname: controlplane and Worker Hostname: computeplaneone)
+- Network: Bridge was used to have internal and external access (if not we can use 2 interface, one for NAT and one as host-only adaptor)
+
+## common tasks/commands to execute on all the nodes
+
+- ![Docker and Containerd](https://d33wubrfki0l68.cloudfront.net/6b4290afef76cad8a084292cd1b5e468e31c9bb3/c26ce/images/blog/2018-05-24-kubernetes-containerd-integration-goes-ga/cri-containerd.png)
 
 - Please execute below commands on all nodes used for kubernetes cluster.
 ```
@@ -24,7 +35,7 @@ EOF
 sysctl --system
 ```
 
-## (Install containerd)
+## Install containerd package on all nodes
 - Set up the repository
 - Install packages to allow apt to use a repository over HTTPS
 ```
@@ -50,17 +61,18 @@ containerd config default > /etc/containerd/config.toml
 systemctl restart containerd
 ```
 
-## k8s control node bootstrap using kubeadm:
-
-- On all nodes:
+- Install kubernetes packages on all nodes.
 ```
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
-- On control nodes (k8s master node):
+## On control nodes (k8s master node):
+- We are bootstrapping control plane node.
+- "--pod-network-cidr" was changes here on local setup. Since my VMs are using same series network.
+- So instead of applying the calico YAML files, first download them and update the CIDR of pod to be used cidr which ever "For example: 10.244.0.0/16 private class".
 ```
-kubeadm init --apiserver-advertise-address=10.128.0.3 --cri-socket=/run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
+#kubeadm init --apiserver-advertise-address=192.168.1.90 --cri-socket=/run/containerd/containerd.sock --pod-network-cidr=10.244.0.0/16
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -71,18 +83,19 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 wget https://docs.projectcalico.org/manifests/custom-resources.yaml
-```
-- Note:
-  - Since I am using subnet for POD as 10.244.0.0/16 instead of default 192.168.0.0/16 which will conflict with my nodes ip address. First I downloaded custom-resources.yaml file and updates below parameter.
-  - cidr: 10.244.0.0/16
-  - please read calico project details for more info --> https://docs.projectcalico.org/getting-started/kubernetes/quickstart
 
-```
+Note:
+- Since I am using subnet for POD as 10.244.0.0/16 instead of default 192.168.0.0/16 which will conflict with my nodes ip address. First I downloaded custom-resources.yaml file and updates below parameter.
+- cidr: 10.244.0.0/16
+- please read calico project details for more info --> https://docs.projectcalico.org/getting-started/kubernetes/quickstart
+
+
+# After update, apply the YAML file
 kubectl apply -f custom-resources.yaml 
 ```
 
-- On worker nodes to join the cluster:
-  - See the output of kubeadm init command after successfull. It will print kubeadm join command output to be executed on worker nodes:
+## On worker nodes to join the cluster:
+- See the output of kubeadm init command after successfull. It will print kubeadm join command output to be executed on worker nodes:
 ```
 For example:
 
@@ -90,16 +103,15 @@ kubeadm join 10.128.0.3:6443 --token wt98bb.4gsf0qqicl5vg0gm \
         --discovery-token-ca-cert-hash sha256:1c4bc8d73e4d45e78569ff3644e67b75946289cb41adecb26cedafb0608df64f 
 ```
 
-- On contol node:
-```
-Now check all the pods deployed using kubeadm are running, before checking the node status:
+## On contol node:
+- Now check all the pods deployed using kubeadm are running, before checking the node status:
 
-kubectl get pods --all-namespaces
 ```
+#kubectl get pods --all-namespaces
 
-  - Note: By default control node will not be able to launch the pod, so to enable execute below command:
-```
-kubectl taint nodes --all node-role.kubernetes.io/master-
+Note: By default control node will not be able to launch the pod, so to enable execute below command:
+
+#kubectl taint nodes --all node-role.kubernetes.io/master-
 ```
 
 - cli tool to manage CRI like containerd, cri-o etc.,

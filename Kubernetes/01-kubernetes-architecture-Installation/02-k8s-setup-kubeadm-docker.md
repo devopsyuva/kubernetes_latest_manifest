@@ -5,6 +5,7 @@
 ## System Specification:
 - OS: Ubuntu 20.04 LTS server
 - RAM: 4GB or more
+- CPU: 2 core or more
 - Disk: 30GB+
 - GCP Instances: 2 instances, one for control plane node (Hostname: controlplane) and another for compute (Hostname: computeplaneone)
 - Swap Memory: Diable
