@@ -1,6 +1,6 @@
 # Kubernetes Setup on GCP inatnces with Docker as CRI(Container Runtime Interface)
 - How to create a GCP account free trail?
-- ![GCP Account Free Trail](https://youtu.be/aOVh4qlx-eU)
+- [GCP Account Free Trail](https://youtu.be/aOVh4qlx-eU)
 
 ## System Specification:
 - OS: Ubuntu 20.04 LTS server
