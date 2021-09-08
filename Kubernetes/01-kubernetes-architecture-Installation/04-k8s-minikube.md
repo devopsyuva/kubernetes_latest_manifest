@@ -1,25 +1,25 @@
 # Kubernetes Setup using minikube for standalone
 
-- System Requirements
-```
-OS: Ubuntu 20.04 LTS server
-RAM: 4GB or more
-Network: Nat and host-only for internal purpose, and Bridge/Public IP address external access
-Disk: 30GB or more
-Swap memory: disable (Important)
-```
+## System Requirements
+- OS: Ubuntu 20.04 LTS server
+- RAM: 4GB or more
+- Network: Nat and host-only for internal purpose, and Bridge/Public IP address external access
+- Disk: 30GB or more
+- Swap memory: disable (Important)
 
-- Pre-request
-```
+## Pre-request
 - on new machine created, just run
+```
 #apt update && apt dist-upgrade
 #init 6 --> execute this command if kernel was upgraded while "dis-upgrade", better to reboot
-
+```
 - Disable swap memeory permanentry and temporarly
+```
 #swapoff -a (temporary)
 # vi /etc/fstab --> comment the line which shows swap details and :x or :wq! to save and exit
 ```
 
+## Install minikube
 - First download utility and place it in proper executable binary default location
 ```
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
