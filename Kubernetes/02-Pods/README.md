@@ -2,6 +2,8 @@
 
 **POD will ensure that container with one or more are logically grouped to gather to have common network and shared storage. POD will assigned with an IP address with the help of CNI (container network interface add-on) like calico,  wavenet, flannel (deprecated) etc.,**
 
+- The pods use NAT to communicate with other resources outside the Kubernetes cluster. This approach reduces the number of IP addresses you need to reserve in your network space for pods to use.
+
 ## Networking
 Each Pod is assigned a unique IP address. Every container in a Pod shares the network namespace of a POD namespace,including the IP address and network ports. Containers inside a Pod can communicate with one another using localhost. When containers in a Pod communicate with entities outside the Pod, they must coordinate how they use the shared network resources (such as ports).
 

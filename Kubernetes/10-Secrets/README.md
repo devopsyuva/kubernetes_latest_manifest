@@ -1,22 +1,15 @@
-Secrets are used to store and pass the sensitive information to the
-application deployment.
-We use multiple ways to do that, lets list all the possibles ways to create
-secrets:
-1)create a secret through yaml file as below:
-apiVersion: v1
-kind: Secret
-metadata:
-  name: test-secret
-data:
-  username: bXktYXBw
-  password: Mzk1MjgkdmRnN0pi  --> encrypted data with base64
+# Secrets
+- Secrets are used to store and pass the sensitive information to the application deployment.
+- Secret is stored in tmpfs, not written in disk.
+- We use multiple ways to do that, calling secrets through "environment" variables and "volumes" section.
+- Secrets are stored withing a given namespace and can only be accessed by pods within the same namespace.
+- Secrets are only provoided to nodes with a scheduled pod that requires them.
+- Inorder to store senscitive information in a form of secrets, we create a secret as below
+  - generic
+  - tls
+  - docker-registry
 
-2)Lets create secrets from CLI using literal method
-kubectl create secret generic backend-user --from-literal=backend-username='backend-admin' --from-literal=mysqldb_root_password='test1234'
-
-3)We can also pass file with out data and create the secrets:
-kubectl create secret generic my-secret --from-file=path/to/bar
-
+```
 Help output:
 root@kubernetesmaster:~# kubectl create secret
 Create a secret using specified subcommand.
@@ -57,3 +50,4 @@ kubectl create secret tls tls-secret --cert=path/to/tls.cert --key=path/to/tls.k
 or
 
 kubectl create secret tls NAME --cert=path/to/cert/file --key=path/to/key/file [--dry-run]
+```

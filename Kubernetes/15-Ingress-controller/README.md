@@ -1,3 +1,10 @@
+# Ingress Controller
+- When you create a LoadBalancer-type Service, you also create an underlying Azure load balancer resource. The load balancer is configured to distribute traffic to the pods in your Service on a given port.
+- The LoadBalancer only works at layer 4. At layer 4, the Service is unaware of the actual applications, and can't make any more routing considerations.
+- Ingress controllers work at layer 7, and can use more intelligent rules to distribute application traffic. Ingress controllers typically route HTTP traffic to different applications based on the inbound URL.
+
+- [k8s-ingress](../src/images/k8s-ingress.png)
+
 In this demo, we have added two methods to install the nginx ingress
 controller.
 

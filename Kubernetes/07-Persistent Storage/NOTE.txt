@@ -1,4 +1,4 @@
-How to change default storage class?
+# How to change default storage class?
 
 #kubectl get storageclass
 NAME                 PROVISIONER               AGE

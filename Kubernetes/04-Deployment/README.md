@@ -1,14 +1,12 @@
-Deployment provides declarative updates for Pods and ReplicaSets
+## Deployment provides declarative updates for Pods and ReplicaSets
 
-we can use deployment for application upgrade and rollback the changes if
-the desired function crashes. we can also scale the number of replicas for
-the deployment as well.
-
+- we can use deployment for application upgrade/Rollout and Rollback/downgrade the changes if the desired function crashes. we can also scale the number of replicas for the deployment as well.
+```
 #kubectl scale deployment/nginx-deployment --replicas=5
+```
 
-For example:
-if we want to change the image for a deployment like from 1.7.9 to 1.9.1
-which is upgrade of your applications
+- For example:
+if we want to change the image for a deployment like from 1.7.9 to 1.9.1 which is upgrade of your applications
 
 Set a deployment's nginx container image to 'nginx:1.9.1', and its busybox container image to 'busybox'.
 #kubectl image deployment/nginx busybox=busybox nginx=nginx:1.9.1
@@ -73,4 +71,3 @@ https://kubernetes.io/docs/concepts/services-networking/connect-applications-ser
 Images:
 
 https://theithollow.com/wp-content/uploads/2019/01/image-9-1024x375.png
-

@@ -1,6 +1,8 @@
-This approach is used to transfer/use the configuration files for application
-deployment as key-value pair.
+# ConfigMap
+- ConfigMaps are used to inject key-value pair non-sensitive information like configuration files, scripts etc.,
+- ConfigMaps are stored within a given namespace and can only be accessed by pods within the same namespace.
 
+```
 Syntax:
 #kubectl create configmap <map-name> <data-source>
 
@@ -19,10 +21,4 @@ Examples:
 
   # Create a new configmap named my-config from an env file
   kubectl create configmap my-config --from-env-file=path/to/bar.env
-
-Sample env file looks like below:
-==
-enemies=aliens
-lives=3
-allowed="true"
-==
+```
