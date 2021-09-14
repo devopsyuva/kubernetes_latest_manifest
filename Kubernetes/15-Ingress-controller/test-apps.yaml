@@ -2,37 +2,17 @@ apiVersion: apps/v1 #extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    run: nginx
-  name: nginx-deploy-main
+    app: nginx-webapp1
+  name: app1-nginx-deploy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: nginx-main
+      app: nginx-app1
   template:
     metadata:
       labels:
-        run: nginx-main
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
----
-apiVersion: apps/v1 #extensions/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    run: nginx
-  name: nginx-deploy-green
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      run: nginx-green
-  template:
-    metadata:
-      labels:
-        run: nginx-green
+        app: nginx-app1
     spec:
       volumes:
       - name: webdata
@@ -43,7 +23,7 @@ spec:
         volumeMounts:
         - name: webdata
           mountPath: "/webdata"
-        command: ["/bin/sh", "-c", 'echo "<h1>I am <font color=green>GREEN</font></h1>" > /webdata/index.html']
+        command: ["/bin/sh", "-c", 'echo "<h1>Welcome to Sudheer Devops <font color=green>APP1</font></h1>" > /webdata/index.html']
       containers:
       - image: nginx
         name: nginx
@@ -55,17 +35,17 @@ apiVersion: apps/v1 #extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    run: nginx
-  name: nginx-deploy-blue
+    app: nginx-webapp2
+  name: app2-nginx-deploy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: nginx-blue
+      app: nginx-app2
   template:
     metadata:
       labels:
-        run: nginx-blue
+        app: nginx-app2
     spec:
       volumes:
       - name: webdata
@@ -76,7 +56,7 @@ spec:
         volumeMounts:
         - name: webdata
           mountPath: "/webdata"
-        command: ["/bin/sh", "-c", 'echo "<h1>I am <font color=blue>BLUE</font></h1>" > /webdata/index.html']
+        command: ["/bin/sh", "-c", 'echo "<h1>Welcome to Sudheer Devops <font color=blue>APP2</font></h1>" > /webdata/index.html']
       containers:
       - image: nginx
         name: nginx

@@ -1,83 +1,81 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-resource-1
+  name: sudheerdevops-ingress
 spec:
   rules:
-  - host: nginx.example.com
+  - host: app1.sudheerdevops.tld
     http:
       paths:
-      - backend:
-          serviceName: nginx-deploy-main
-          servicePort: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app1-nginx
+            port:
+              number: 80
+  - host: app2.sudheerdevops.tld
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app2-nginx
+            port:
+              number: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress-resource-2
+  name: sudheerdevops-ingress
 spec:
   rules:
-  - host: nginx.example.com
+  - host: app1.sudheerdevops.tld
     http:
       paths:
       - backend:
-          serviceName: nginx-deploy-main
+          serviceName: app1-nginx
           servicePort: 80
-  - host: blue.nginx.example.com
+  - host: app2.sudheerdevops.tld
     http:
       paths:
       - backend:
-          serviceName: nginx-deploy-blue
+          serviceName: app2-nginx
           servicePort: 80
-  - host: green.nginx.example.com
-    http:
+---
+apiVersion: networking.k8s.io/v1 #extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-resource-app1
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
       paths:
-      - backend:
-          serviceName: nginx-deploy-green
-          servicePort: 80
-
+      - path: /app1
+        pathType: Prefix
+        backend:
+          service:
+            name: app-nginx
+            port:
+              number: 80
+---
 #or we call follow below yaml file
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1 #extensions/v1beta1
 kind: Ingress
 metadata:
   name: ingress-resource-1
 spec:
   tls:
   - hosts:
-    - test.visualpath.tld
-    secretName: my-certs
+    - app.sudheerdevops.tld
+    secretName: sudheer-client-certs
   rules:
-  - host: test.visualpath.tld
+  - host: app.sudheerdevops.tld
     http:
       paths:
       - backend:
-          serviceName: nginx-deploy-main
-          servicePort: 80
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: ingress-resource-2
-spec:
-  rules:
-  - host: nginx.example.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: nginx-deploy-main
-          servicePort: 80
-  - host: blue.nginx.example.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: nginx-deploy-blue
-          servicePort: 80
-  - host: green.nginx.example.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: nginx-deploy-green
+          serviceName: app-nginx
           servicePort: 80
