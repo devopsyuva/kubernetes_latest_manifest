@@ -1,10 +1,8 @@
-A DaemonSet ensures that all (or some) Nodes run a copy of a Pod.
-As nodes are added to the cluster, Pods are added to them. As nodes
-are removed from the cluster, those Pods are garbage collected.
-Deleting a DaemonSet will clean up the Pods it created.
-
-
-Update image of all containers of daemonset abc to 'nginx:1.9.1'
+# Daemonset
+- A DaemonSet ensures that all (or some) Nodes run a copy of a Pod. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected.
+- Deleting a DaemonSet will clean up the Pods it created.
+- Update image of all containers of daemonset abc to 'nginx:1.9.1'
+```
 #kubectl set image daemonset abc *=nginx:1.9.1
 
 We can set the labels for different objects as mentioned below:
@@ -31,4 +29,4 @@ Examples:
 
 From 1.6 we can do rolling updates.
 #kubectl set image ds/frontend webserver=httpd
-
+```

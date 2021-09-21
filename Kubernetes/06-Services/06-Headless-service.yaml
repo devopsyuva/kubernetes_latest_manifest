@@ -45,47 +45,19 @@ spec:
       port: 80
       targetPort: 80
 ---
-apiVersion: v1
-kind: Pod
-metadata:
-  name: busybox
-  namespace: default
-spec:
-  containers:
-  - name: busybox
-    image: busybox:1.28
-    command:
-      - sleep
-      - "3600"
-    imagePullPolicy: IfNotPresent
-  restartPolicy: Always
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: normal-service
-spec:
-  selector:
-    app: nginx-server
-  ports:
-    - protocol: TCP
-      port: 9091
-      targetPort: 80
----
-If we want to peform the above actions from CLI:
+#If we want to peform the above actions from CLI:
+# kubectl create deployment nginx --image=nginx
+# kubectl scale --replicas=5 deployment nginx
+# kubectl expose deployment nginx --name headlessservice --cluster-ip=None
+# kubectl expose deployment nginx --name nginxclusterip --port=80  --target-port=80
 
-kubectl create deployment nginx --image=nginx
-kubectl scale --replicas=5 deployment nginx
-kubectl expose deployment nginx --name headlessservice --cluster-ip=None
-kubectl expose deployment nginx --name nginxclusterip --port=80  --target-port=80
+# kubectl run --generator=run-pod/v1 --rm utils -it --image dubareddy/utils:latest bash
 
+#Once you login to pod execute command "host headlessservice" and for loop to check loadbalance
 
-kubectl run --generator=run-pod/v1 --rm utils -it --image dubareddy/utils:latest bash
+#for i in $(seq 1 10);do curl headlessservice;done
 
-Once you login to pod execute command "host headlessservice" and for loop to check loadbalance
-
-for i in $(seq 1 10);do curl headlessservice;done
----
+#Below Example can be tested once we have some idea about Stateful set applications
 apiVersion: v1
 kind: Service
 metadata:

@@ -21,9 +21,9 @@ rules:
         backend:
         serviceName: ingress-blog-ghost
         servicePort: 80
-tls:
-- secretName: joomla-tls-cert
-    hosts:
+   tls:
+   - secretName: joomla-tls-cert
+     hosts:
     - DOMAIN
     - blog.DOMAIN
 ---

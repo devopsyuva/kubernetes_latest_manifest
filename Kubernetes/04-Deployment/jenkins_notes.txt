@@ -1,3 +1,13 @@
+```
+root@controlplanenode:~# kubectl logs jenkins-deployment-845c6866bc-jr59v
+Can not write to /var/jenkins_home/copy_reference_file.log. Wrong volume permissions?
+touch: cannot touch '/var/jenkins_home/copy_reference_file.log': Permission denied
+root@controlplanenode:~#
+
+To fix the issue, change the ownership of hostPath to 1000:1000 as per your path
+#chown -R 1000:1000 /mnt/jenkins_home --> as per my example manifest file
+```
+
 In order to install required plugins from Dockerfile it self, please follow
 below steps:
 

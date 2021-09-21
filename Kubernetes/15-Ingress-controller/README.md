@@ -26,19 +26,33 @@
 - TLS
 
 ### References:
-- [Ingress Nginx](https://docs.nginx.com/nginx-ingress-controller/)
+- [Ingress Nginx](https://kubernetes.github.io/ingress-nginx/deploy/)
 - [TLS ingress](https://kubernetes.github.io/ingress-nginx/user-guide/tls/)
 - [Client Cert Auth](https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/)
+- [Azure Example](https://docs.microsoft.com/en-us/azure/aks/ingress-own-tls)
 
 ```
 #TLS certs creation and manual verification
 #Copy
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out sudheer-ingress-tls.crt -keyout sudheer-ingress-tls.key -subj "/CN=app1.sudheerdevops.tld/O=app2.sudheerdevops.tld"
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out app1-ingress-tls.crt -keyout app1-ingress-tls.key -subj "/CN=app1.sudheerdevops.tld/O=SudheerDevops"
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out app2-ingress-tls.crt -keyout app2-ingress-tls.key -subj "/CN=app2.sudheerdevops.tld/O=SudheerDevops"
 
-kubectl create secret tls green-ingress-tls --key sudheer-ingress-tls.key --cert sudheer-ingress-tls.crt
+or
+openssl req -nodes -newkey rsa:2048 -keyout app1-ingress.key -out app1-ingress.csr -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=app1.sudheerdevops.tld"
+Field   Meaning	              Example
+=====================================
+/C=	    Country	              IN
+/ST=	  State	                Telangana
+/L=	    Location	            Hyderabad
+/O=	    Organization	        Global Security
+/OU=	  Organizational Unit   IT Department
+/CN=	  Common Name           app1.sudheerdevops.com
+
+kubectl create secret tls app1-ingress-tls --key app1-ingress-tls.key --cert app1-ingress-tls.crt
+kubectl create secret tls app2-ingress-tls --key app2-ingress-tls.key --cert app2-ingress-tls.crt
 
 #Curl example:
-curl -v -k --resolve app1.sudheerdevops.tld:443:192.168.0.20 https://app1.sudheerdevops.tld
+curl -v -k --resolve app1.sudheerdevops.tld:30443:192.168.1.91 https://app1.sudheerdevops.tld/app1
 ```
 
 ```
