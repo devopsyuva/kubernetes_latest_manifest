@@ -103,3 +103,9 @@ Output format                       Description
 
 Reference: https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/
 https://unofficial-kubernetes.readthedocs.io/en/latest/user-guide/kubectl-cheatsheet/
+
+
+
+
+kubeadm join 10.128.0.2:6443 --token nmuqj4.5zs6b65k003y339f \
+        --discovery-token-ca-cert-hash sha256:8a7f8a5b9d1a372117eca6c4ccb8522f872ff23e05b975569bbd76e37dc167e0
