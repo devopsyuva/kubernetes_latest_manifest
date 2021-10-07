@@ -6,9 +6,9 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1Gi
+    storage: 1Gi  #Mi,Gi,Ti,Pi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce  #ReadWriteMany, ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   hostPath:
     path: "/tmp/data"

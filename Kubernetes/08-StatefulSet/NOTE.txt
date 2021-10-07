@@ -46,7 +46,10 @@ Deployment and Scaling Guarantee
 
 
 note:
-Headless service is typically used with StatefulSets where the name of the pods are fixed. This is useful in situations like when you're settling up a MySQL cluster where you need to know the name of the master. StatefulSets appends an ordinal number to the name of the pod and it will always assign the same ordinal number of the pod is restarted or migrated by the scheduler.
+1) Headless service is typically used with StatefulSets where the name of the pods are fixed. This is useful in situations 
+like when you're settling up a MySQL cluster where you need to know the name of the master. StatefulSets appends an ordinal
+number to the name of the pod and it will always assign the same ordinal number of the pod is restarted or migrated by the
+scheduler.
 
 In the case of a regular Deployment, ReplicaSet appends a hash to the pod's name making addressing specific pods difficult. The hash sort of anonomize the pods.
 

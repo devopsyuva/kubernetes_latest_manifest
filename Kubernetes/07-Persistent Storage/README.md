@@ -3,7 +3,7 @@
 - A PersistentVolumeClaim (PVC) is a request for storage by a user.
 - It is similar to a pod. Pods consume node resources and PVCs consume PV resources.
 - Pods can request specific levels of resources (CPU and Memory). Claims can request specific size and access modes (e.g., can be mounted once read/write or many times read-only).
-- Dynamic provisioning uses a **StorageClass** to identify what type of Azure storage needs to be created.
+- Dynamic provisioning uses a **StorageClass** to identify what type of storage needs to be created.
 - As updated earlier, PVs can be provisioned in two ways:
   - Static and Dynamic
     - Static PV are provisioned by cluster administrator, which can be managed by kubernetes api-server

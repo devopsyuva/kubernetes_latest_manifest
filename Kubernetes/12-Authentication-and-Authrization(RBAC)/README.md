@@ -1,17 +1,16 @@
-Role-based access control (RBAC) is a method of regulating access to
-computer or network resources based on the roles of individual users
-within an enterprise.
+# Role-based access control (RBAC)
+it is a method of regulating access to computer or network resources based on the roles of individual users within an enterprise.
 
-RBAC api objects/resources include:
+## RBAC api objects/resources include:
 Pods
 PersistentVolumes
 ConfigMaps
 Deployments
 Nodes
 Secrets
-Namespaces
+Namespaces etc.,
 
-Possible operations(verbs) that can be performed on above resources:
+## Possible operations(verbs) that can be performed on above resources:
 create
 get
 delete
@@ -22,14 +21,13 @@ view
 watch
 exec
 
-
 To manage RBAC in Kubernetes, apart from resources and operations, we need the following elements:
 
 Rules: A rule is a set of operations (verbs) that can be carried out
 on a group of resources which belong to different API Groups.
 
 Roles and ClusterRoles: Both consist of rules. The difference between
-a Role and a ClusterRole is the scope: in a Role, the rules are applicable
+a Role and a ClusterRole is the scope: in a #Role, the rules are applicable
 to a single namespace, whereas a ClusterRole is cluster-wide, so the rules
 are applicable to more than one namespace. ClusterRoles can define rules
 for cluster-scoped resources (such as nodes) as well. Both Roles and

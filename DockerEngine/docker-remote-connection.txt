@@ -122,5 +122,81 @@ cp -v {ca,cert,key}.pem ~/.docker
 export DOCKER_HOST=tcp://$HOST:2376 DOCKER_TLS_VERIFY=1
 
 
+[root@localhost ~]# cat /etc/docker/server.pem
+-----BEGIN CERTIFICATE-----
+MIIDKjCCAhKgAwIBAgIQOK3zvb5REB25sk9us8BxsTANBgkqhkiG9w0BAQsFADAP
+MQ0wCwYDVQQKEwRyb290MB4XDTIxMTAwMzEwNTUwMFoXDTI0MDkxNzEwNTUwMFow
+GTEXMBUGA1UEChMOcm9vdC5taW5pc2hpZnQwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+DwAwggEKAoIBAQCxrhQeV2Egs1QerkVfxciwpGjZeQm8ReBJJtJHOIC9ISYGnhJz
+ZD9Sg0eRs3Gu3nnuGMoejxYjf2o5dwXPiuweVtH6nc1kw9isD/kTiuTz2iFuEn3R
+gaZl/BDzqCjDvF4VfU+N3WNF3V8BumEllvvMvEzOYshJUfnSLjWM3ovQvbIo6JkK
+22C9WJs5nVFhL/VYhJE6/M3BYqziVWh4g7LrwvacM2n83ESFGORuiF8UkaJW1sZy
+m+YXOTO8XnV0EFY/avdemQP5mcJRAIZzO4XMr3zm4/xOL90VADnpwN11st7FaDHr
+UBNpkiBBqy5zsG0AemosCHR5A1ie7WXEgvYHAgMBAAGjeDB2MA4GA1UdDwEB/wQE
+AwIDqDATBgNVHSUEDDAKBggrBgEFBQcDATAMBgNVHRMBAf8EAjAAMB8GA1UdIwQY
+MBaAFITT2HQzQK6kFyKokSkb5gTXCdhWMCAGA1UdEQQZMBeCCWxvY2FsaG9zdIcE
+wKgAbYcEfwAAATANBgkqhkiG9w0BAQsFAAOCAQEABPmxwEq+6qrGDKx7o+zkvKLj
+PoZzfzYlnwR3RS6Dr58piTBRdkre0ZoVOEMb1aGjVMjOXv0GwhPKkBc9jotf7tjM
+cfjd1RMeLeJOz7F0Eiqgi5CtbRywg9rDh/4c0c9ehhYTpAL/s+iSmTjB61do53dE
+vQp5rDWwm6HYxDNWPU6ynpRRG+mZ1hZEhRULp3CghPNNdjBBk1LttRTg/KPRscD+
+nxdqqmt/I06vbRH/psZ7T/VRZ0OeT3hyqZKpCZRo33UlzqY9RDOJYrPg4ckjNFEX
+Cp6p7EixCuaaibU4BXfMfkqhF0DkYo585acJES/DKUTAd+nskXXvepKLHeeDAA==
+-----END CERTIFICATE-----
+[root@localhost ~]# cat /etc/docker/server-key.pem
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAsa4UHldhILNUHq5FX8XIsKRo2XkJvEXgSSbSRziAvSEmBp4S
+c2Q/UoNHkbNxrt557hjKHo8WI39qOXcFz4rsHlbR+p3NZMPYrA/5E4rk89ohbhJ9
+0YGmZfwQ86gow7xeFX1Pjd1jRd1fAbphJZb7zLxMzmLISVH50i41jN6L0L2yKOiZ
+CttgvVibOZ1RYS/1WISROvzNwWKs4lVoeIOy68L2nDNp/NxEhRjkbohfFJGiVtbG
+cpvmFzkzvF51dBBWP2r3XpkD+ZnCUQCGczuFzK985uP8Ti/dFQA56cDddbLexWgx
+61ATaZIgQasuc7BtAHpqLAh0eQNYnu1lxIL2BwIDAQABAoIBAEODR7W3sfpA6ae2
+xDl956Hm9sgbi610R6LEE4ZoW9KBc/dzvMMHxl/N7jXYn0u40U+9L5+o8tqOIYiw
+Rw7zVIC6sJKvv0mYeQ34C8Z3MkPOEIHImPIwd0+tFavfq42kV4OG1+Gpy3zSfrUj
+YqJr2kWTDwQk2MGzWl+Ym1Rpg2rO53umqROFVEKHxS+yJ4Az1iEGhlVySW+Jmuja
+46+vn0dcAitE5e6ghBgso5Zxs0eWszxmWVFDGsZu0Umrn2gCzNach5yBUMkH2XEu
+KDVlPvcSs6lg1b51E3ukALhlAf2eNiOIGMyyW/gBnTSETRa5C9y7/LVSM+2e4uT6
+2hSFurECgYEA01QhQuHFVoQA6bKVU1rty0ziaD0UqbV/iJnEPBZOPD/ohFXIoL5C
+tHB3gW+933ljqM20aEPJFYPQMHnIuOCuu2S9U55K9WCJua0dCYcfpTOWUymPWZVX
+ad97aDVrIXnYYD1q82Aikr2tUolbpdPmKFdMJSXMByNGPwhFoxHcWesCgYEA1z0U
+wqLnSZKYhiEpBVchThRNpGBS8ay+IMiPEhSpUAchDmtvkHtKRhNuLDXxHTXgsxVx
+rEvu1qVdIa9MzA/FUKg1YOCjH55XFhjHnTUAd2Lc5HMUyI+Sa9dLfhSU9EW0gDMC
+hmURKcyW4xTBll5irYrwCdZnGRmXLlCg5yiBkVUCgYAOw+sLBEFIeTKjIXIjf8/r
+i3SqOdJOxTqi7bNzS0+uD/0L+f5plMGOX+lJpugKTC31ZmH7gvjywuHx8SBgInqy
+5yf/RqkQGe2lhn3n44QHg+I170pvxOp1oEK8FjdlAGFo4AGv/YCM5inNAYHgxTxo
+hyjv04M84G8RCl/rM91EfwKBgALBZm2jdkCL3uYAsKy/085TFjdfgFBVvM1go+xA
+VXaP0M2FdJUt7uJ8xzFLs32DPhAs2xqwkisvTMTsoJgQL597t8s4tP3nogfHY27Q
+yeO9YUSPcJmstNwqkm3Xx5xk9A2cGZEs5A5b7yaTEnNhW/QKzk3h78nzeOr/3z92
+VkpNAoGBALuYA5B62qfjgF7caF/ppK8UNqanvieUwkVFiFI5PDjEiTiLwxIwk6be
+rJFogFNz62yb0F1AmGJLcvpJ9jaN1CJjevX1bQG8htA6mCSNdcMUnqKKDPnyQSIO
+fxEKzR5i6PMDQTo+Y419M3lFwGV33TeUtQVvNF658Dck87xdVaUr
+-----END RSA PRIVATE KEY-----
+[root@localhost ~]# cat /etc/docker/
+ca.pem          key.json        server-key.pem  server.pem
+[root@localhost ~]# cat /etc/docker/ca.pem
+-----BEGIN CERTIFICATE-----
+MIIC6zCCAdOgAwIBAgIRAPUhtwT3yG+ugC0VJrDd34wwDQYJKoZIhvcNAQELBQAw
+DzENMAsGA1UEChMEcm9vdDAeFw0yMTEwMDMxMDQxMDBaFw0yNDA5MTcxMDQxMDBa
+MA8xDTALBgNVBAoTBHJvb3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQC7XZCzw4nxKDr/bvh8sFy1QbS+i9SqwMZ6xC0o0jMKEELtoCVyzCSzuh3sqohh
++9RyH4elaTikhifZjb17IXvRE6pgDM4GrW+7ZdhKz4Oav5upZva8Wn2rlUYpYFZx
+6wBGORrLbGjRmj2c7Z+NNpZp/4+i4FIkIfYJISn1Y227DBCtseRrYXAwqBhvgAqe
+legqtXQlaDiUYWGpw4fL/9XGZplqnE2ihWPd1ksckwSTr+zCEsX5R6eGTlB9vC1o
+wCkKYqdGkzYef1uMOrfzH55TYfDKwlYuSk9Y1oKhRNsMc6hqoTr9Bo1xXw9RIJE+
+abz0+c/Wcl9Qv7yHJH66vvP5AgMBAAGjQjBAMA4GA1UdDwEB/wQEAwICrDAPBgNV
+HRMBAf8EBTADAQH/MB0GA1UdDgQWBBSE09h0M0CupBciqJEpG+YE1wnYVjANBgkq
+hkiG9w0BAQsFAAOCAQEAqDz5y06ztCY8qS454+mi14FAxe/KlwFT0FxIIn47jdkm
+NDkroDZKpjOuG/x65meX/510NaRe66kOxsz+v88PFAVtc61OGI4eBxMjDVdD9r9U
+jEi6mh7JHbksSgwvDU+MB+BF2c7EGIVTo7I18dZM3y57lMTt1mZe4EbYI5QPd9xA
+Ry5/p3cD1pzNojyXpD+hC/yVy6KYaxyrnLrqMxrserPC7cO6eQCWKxx0Au1Y2dw0
+JRZb29swj4VQGs8igbdsTYTz+KxQgTdU9Hr1JUKEWDUr0qhqNbDx4qrfBzrv+6h7
+l56TiY+GXI4YYblrxG5aI63dk6goHo8fwQIYk/Hz3A==
+-----END CERTIFICATE-----
+==
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2376 -H unix:///var/run/docker.sock --log-driver=journald            --signature-verification=true  --add-runtime docker-runc=/usr/libexec/docker/docker-runc-current            --default-runtime=docker-runc            --exec-opt native.cgroupdriver=systemd            --userland-proxy-path=/usr/libexec/docker/docker-proxy-current            --storage-driver overlay2 --tlsverify --tlscacert /etc/docker/ca.pem            --tlscert /etc/docker/server.pem --tlskey /etc/docker/server-key.pem            --label provider=generic --insecure-registry 172.30.0.0/16
+Environment=
+==
+
 Reference:
 https://docs.docker.com/engine/security/https/

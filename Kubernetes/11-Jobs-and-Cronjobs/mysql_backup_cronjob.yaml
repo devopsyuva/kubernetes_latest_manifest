@@ -1,3 +1,4 @@
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: mysql-backup
@@ -13,7 +14,7 @@ spec:
             args:
             - /bin/sh
             - -c
-            - mysqldump -hmysql.default -uroot -ptest123 --all-databases > /var/tmp/mysql_backup.sql
+            - mysqldump -hmysql.default -uroot -ptest123 --all-databases > "/var/tmp/mysql_backup.$(date %F_%R).sql"
             volumeMounts:
               - name: dbbackup
                 mountPath: /var/tmp

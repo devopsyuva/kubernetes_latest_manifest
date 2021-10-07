@@ -13,4 +13,3 @@ https://kubernetes.io/docs/reference/scheduling/policies/
 https://kubernetes.io/docs/concepts/scheduling-eviction/scheduler-perf-tuning/
 
 https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
-

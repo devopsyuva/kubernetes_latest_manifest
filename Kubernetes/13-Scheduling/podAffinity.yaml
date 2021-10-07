@@ -58,11 +58,8 @@ spec:
   containers:
   - name: with-pod-affinity
     image: docker.io/ocpqe/hello-pod
-
-=============
-
-tested once:
-
+---
+#tested once:
 apiVersion: v1
 kind: Pod
 metadata:
