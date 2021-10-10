@@ -1,4 +1,17 @@
-# PersistentVolume and PersistentVolumeClaim
+# Kubenretes Volumes
+**Kubernetes typically treats individual pods as ephemeral, disposable resources. Applications have different approaches available to them for using and persisting data. A volume represents a way to store, retrieve, and persist data across pods and through the application lifecycle.**
+- **A Pod can specify a set of shared storage Volumes. All containers in the Pod can access the shared volumes, allowing those containers to share data. Volumes also allow persistent data in a Pod to survive in case one of the containers within needs to be restarted.**
+
+- Note:
+  - The Pod remains on that Node until the process is terminated, the pod object is deleted, the Pod is evicted for lack of resources, application, or the Node fails.
+
+## Core concepts that provide storage for our applications in Kubernetes on different platforms:
+  - Volumes
+  - Persistent Volumes
+  - StorageClass (Dynamic)
+  - Persistent Volume Claim
+
+## PersistentVolume and PersistentVolumeClaim
 - A PV will be provisioned by administrator to store the data Persistence through **Static or Dynamic** approach, which means data will be available even after POD deletion. We can also provision the PV dynamically using Storage Classes.
 - A PersistentVolumeClaim (PVC) is a request for storage by a user.
 - It is similar to a pod. Pods consume node resources and PVCs consume PV resources.
@@ -11,7 +24,7 @@
 
 [pv-pvc](../src/images/pv-pvc.png)
 
-## Volume Policies
+### Volume Policies
 - We have three types of reclaim policies:
   - Retain, Delete and Recycle
     - The Retain reclaim policy (manual reclamation) allows for manual reclamation of the resource. When the PersistentVolumeClaim is deleted, the PersistentVolume still exists and the volume is considered “released”. But it is not yet available for another claim because the previous claimant’s data remains on the volume. An administrator can manually reclaim the volume with the following steps.
@@ -30,13 +43,13 @@
 - Note:
   - Currently, only NFS and HostPath support recycling. AWS EBS, GCE PD, Azure Disk, and Cinder volumes support deletion.
 
-## Access Modes
+### Access Modes
 - The access modes are:
   - ReadWriteOnce – the volume can be mounted as read-write by a single node
   - ReadOnlyMany – the volume can be mounted read-only by many nodes
   - ReadWriteMany – the volume can be mounted as read-write by many nodes
 
-## Volume status
+### Volume status
 - Available – a free resource that is not yet bound to a claim
 - Bound – the volume is bound to a claim
 - Released – the claim has been deleted, but the resource is not yet reclaimed by the cluster
@@ -52,7 +65,7 @@
 
 - You should NOT use hostPath volume type for StatefulSets
 
-### References:
+#### References:
 - [Storage](https://kubernetes.io/docs/concepts/storage/)
 - [Volumes](https://kubernetes.io/docs/concepts/storage/volumes/)
 - [Persistant Volume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)

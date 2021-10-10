@@ -7,7 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: app1.sudheerdevops.tld
+  - host: app1.sudheerdevops.com
     http:
       paths:
       - path: /
@@ -17,7 +17,7 @@ spec:
             name: app1-nginx
             port:
               number: 80
-  - host: app2.sudheerdevops.tld
+  - host: app2.sudheerdevops.com
     http:
       paths:
       - path: /
