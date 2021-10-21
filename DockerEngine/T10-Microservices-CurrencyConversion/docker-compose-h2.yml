@@ -9,13 +9,13 @@ services:
       - exchange-rate-service
     networks:
       - currency-conversion-network
-      
+
   exchange-rate-service:
     image: shefzee/exchange-rate-service:1.0
     ports:
       - "9092:9092"
     restart: always
-    
+
     environment:
       PORT: 9092
       PROFILE: h2
@@ -28,14 +28,14 @@ services:
     ports:
       - "9091:9091"
     restart: always
-    
+
     environment:
-      PORT: 9091  
-      PROFILE: h2  
-      EXCHANGE_RATE_URL: http://exchange-rate-service:9092  
+      PORT: 9091
+      PROFILE: h2
+      EXCHANGE_RATE_URL: http://exchange-rate-service:9092
     networks:
-      - currency-conversion-network 
-    
+      - currency-conversion-network
+
 
 networks:
   currency-conversion-network:
