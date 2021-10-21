@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   currency-conversion-ui:
-    image: shefzee/currency-conversion-ui:1.0
+    image: shefkjm/currency-conversion-ui:1.0
     ports:
       - "9093:80"
     restart: always
@@ -11,7 +11,7 @@ services:
       - currency-conversion-network
 
   exchange-rate-service:
-    image: shefzee/exchange-rate-service:1.0
+    image: shefkjm/exchange-rate-service:1.0
     ports:
       - "9092:9092"
     restart: always
@@ -24,7 +24,7 @@ services:
     networks:
       - currency-conversion-network
   currency-conversion-service:
-    image: shefzee/currency-conversion-service:1.0
+    image: shefkjm/currency-conversion-service:1.0
     ports:
       - "9091:9091"
     restart: always
