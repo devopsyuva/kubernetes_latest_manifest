@@ -1,9 +1,4 @@
-Create a namespace "monitoring" to create prometheus deployment on that
-specific namespace
-
-kubectl create namespace monitoring
-
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: prometheus
@@ -24,7 +19,7 @@ rules:
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus
@@ -72,11 +67,15 @@ data:
         static_configs:
         - targets:
           - "alertmanager.monitoring.svc:9093"
-
     scrape_configs:
       - job_name: 'node'
+        scheme: https
         static_configs:
         - targets: ['nodeexporter-service.monitoring.svc.cluster.local:9100']
+
+      - job_name: 'fluentd'
+        static_configs:
+        - targets: ['fluentd.kube-logging.svc.cluster.local:24231']
       
       - job_name: 'kubernetes-apiservers'
 
@@ -88,6 +87,18 @@ data:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+
+      - job_name: 'kubernetes-nodes'
+
+        scheme: https
+
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         relabel_configs:
         - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
           action: keep
@@ -113,8 +124,6 @@ data:
           regex: (.+)
           target_label: __metrics_path__
           replacement: /api/v1/nodes/${1}/proxy/metrics
-
-
       - job_name: 'kubernetes-pods'
 
         kubernetes_sd_configs:
@@ -141,7 +150,6 @@ data:
         - source_labels: [__meta_kubernetes_pod_name]
           action: replace
           target_label: kubernetes_pod_name
-
       - job_name: 'kubernetes-cadvisor'
 
         scheme: https
@@ -211,7 +219,7 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: prom/prometheus:v2.12.0
+          image: prom/prometheus:v2.30.3
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"
@@ -245,228 +253,3 @@ spec:
   ports:
     - port: 8080
       targetPort: 9090
-      nodePort: 30000
-
-Now we access the prometheus dashboard with node_ip:30000
-
-++
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: grafana-deployment
-  namespace: monitoring
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: grafana-server
-  template:
-    metadata:
-      labels:
-        app: grafana-server
-    spec:
-      containers:
-        - name: grafana
-          image: grafana/grafana
-          ports:
-            - containerPort: 3000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: grafana-service
-  namespace: monitoring
-spec:
-  selector:
-    app: grafana-server
-  type: NodePort
-  ports:
-    - port: 3000
-      targetPort: 3000
-      nodePort: 31000
-++
-
-
-
-How to intigrate node-exporter to prometheus?
-
-update prometheus.yaml file with below parameters
-++
-scrape_configs:
-- job_name: 'node'
-  static_configs:
-  - targets: ['nodeexporter-service.monitoring.svc.cluster.local:9100']
-++
-
-Serviceaccount, clusterRole and ClusterRoleBinding
-++
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: node-exporter
-  namespace: monitoring
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: node-exporter
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: node-exporter
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: node-exporter
-subjects:
-- kind: ServiceAccount
-  name: node-exporter
-  namespace: monitoring
-++
-
-Deploy node-exporter using daemonset as it should fetch data from all the nodes:
-
-++
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    app: node-exporter
-  name: node-exporter
-  namespace: monitoring
-spec:
-  selector:
-    matchLabels:
-      app: node-exporter
-  template:
-    metadata:
-      labels:
-        app: node-exporter
-    spec:
-      containers:
-      - args:
-        - --web.listen-address=127.0.0.1:9100
-        - --collector.systemd
-        - --collector.processes
-        - --path.procfs=/host/proc
-        - --path.sysfs=/host/sys
-        - --path.rootfs=/host/root
-        - --no-collector.wifi
-        - --no-collector.hwmon
-        - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+)($|/)
-        - --collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$
-        image: quay.io/prometheus/node-exporter:v0.18.1
-        name: node-exporter
-        resources:
-          limits:
-            cpu: 250m
-            memory: 180Mi
-          requests:
-            cpu: 102m
-            memory: 180Mi
-        volumeMounts:
-        - mountPath: /host/proc
-          name: proc
-          readOnly: false
-        - mountPath: /host/sys
-          name: sys
-          readOnly: false
-        - mountPath: /host/root
-          mountPropagation: HostToContainer
-          name: root
-          readOnly: true
-      - args:
-        - --logtostderr
-        - --secure-listen-address=[$(IP)]:9100
-        - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
-        - --upstream=http://127.0.0.1:9100/
-        env:
-        - name: IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        image: quay.io/coreos/kube-rbac-proxy:v0.4.1
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 9100
-          hostPort: 9100
-          name: https
-        resources:
-          limits:
-            cpu: 20m
-            memory: 40Mi
-          requests:
-            cpu: 10m
-            memory: 20Mi
-      hostNetwork: true
-      hostPID: true
-      nodeSelector:
-        kubernetes.io/os: linux
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 65534
-      serviceAccountName: node-exporter
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      volumes:
-      - hostPath:
-          path: /proc
-        name: proc
-      - hostPath:
-          path: /sys
-        name: sys
-      - hostPath:
-          path: /
-        name: root
-++
-
-Expose it as service:
-
-++
-apiVersion: v1
-kind: Service
-metadata:
-  name: nodeexporter-service
-  namespace: monitoring
-spec:
-  selector:
-    app: node-exporter
-  ports:
-    - port: 9100
-      targetPort: 9100
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    k8s-app: node-exporter
-  name: node-exporter
-  namespace: monitoring
-spec:
-  clusterIP: None
-  ports:
-  - name: https
-    port: 9100
-    targetPort: https
-  selector:
-    app: node-exporter
-++
-
-Reference: 
-https://docs.docker.com/config/daemon/prometheus/
-git clone https://github.com/bibinwilson/kubernetes-prometheus

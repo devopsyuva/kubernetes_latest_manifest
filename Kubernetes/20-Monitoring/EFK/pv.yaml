@@ -1,3 +1,4 @@
+#Optional: if we don't have storageclass for Dynamic PV creation
 kind: PersistentVolume
 apiVersion: v1
 metadata:

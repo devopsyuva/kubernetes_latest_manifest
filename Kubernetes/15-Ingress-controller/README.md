@@ -21,7 +21,7 @@
 
 ## Types of Ingress
 - Ingress backend by a single service
-- Multi-Services access with single IP address
+- Multi-Services access with single IP address(Path Based Routing)
 - Name based virtual hosting
 - TLS
 
@@ -34,8 +34,8 @@
 ```
 #TLS certs creation and manual verification
 #Copy
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out app1-ingress-tls.crt -keyout app1-ingress-tls.key -subj "/CN=app1.sudheerdevops.tld/O=SudheerDevops"
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out app2-ingress-tls.crt -keyout app2-ingress-tls.key -subj "/CN=app2.sudheerdevops.tld/O=SudheerDevops"
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out app1-ingress-tls.crt -keyout app1-ingress-tls.key -subj "/CN=app1.sudheerdevops.com/O=SudheerDevops"
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out app2-ingress-tls.crt -keyout app2-ingress-tls.key -subj "/CN=app2.sudheerdevops.com/O=SudheerDevops"
 
 or
 openssl req -nodes -newkey rsa:2048 -keyout app1-ingress.key -out app1-ingress.csr -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=app1.sudheerdevops.tld"

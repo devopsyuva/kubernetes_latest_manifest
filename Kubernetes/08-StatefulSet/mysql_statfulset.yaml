@@ -128,6 +128,59 @@ spec:
       resources:
         requests:
           storage: 1Gi
+```
+root@controlplane:~/statefulset# kubectl get all -o wide
+NAME                                          READY   STATUS              RESTARTS       AGE   IP               NODE              NOMINATED NODE   READINESS GATES
+pod/mysql-0                                   1/1     Running             0              14s   192.168.101.65   computeplaneone   <none>           <none>
+pod/mysql-1                                   0/1     ContainerCreating   0              2s    <none>           computeplaneone   <none>           <none>
+pod/nfs-server-provisioner-79d64c49bc-5q6jt   1/1     Running             18 (27m ago)   21d   192.168.101.68   computeplaneone   <none>           <none>
+
+NAME                   TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/kubernetes     ClusterIP   10.96.0.1    <none>        443/TCP    29d   <none>
+service/mysql-server   ClusterIP   None         <none>        3306/TCP   14s   db=mysql
+
+NAME                                     READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS               IMAGES                                                   SELECTOR
+deployment.apps/nfs-server-provisioner   1/1     1            1           21d   nfs-client-provisioner   quay.io/external_storage/nfs-client-provisioner:latest   app=nfs-server-provisioner
+
+NAME                                                DESIRED   CURRENT   READY   AGE   CONTAINERS               IMAGES                                                   SELECTOR
+replicaset.apps/nfs-server-provisioner-79d64c49bc   1         1         1       21d   nfs-client-provisioner   quay.io/external_storage/nfs-client-provisioner:latest   app=nfs-server-provisioner,pod-template-hash=79d64c49bc
+
+NAME                     READY   AGE   CONTAINERS   IMAGES
+statefulset.apps/mysql   1/3     14s   mysql        mysql:5.7
+root@controlplane:~/statefulset#
+NAME                   TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/kubernetes     ClusterIP   10.96.0.1    <none>        443/TCP    29d   <none>
+service/mysql-server   ClusterIP   None         <none>        3306/TCP   45s   db=mysql
+
+NAME                                     READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS               IMAGES                                                   SELECTOR
+deployment.apps/nfs-server-provisioner   1/1     1            1           21d   nfs-client-provisioner   quay.io/external_storage/nfs-client-provisioner:latest   app=nfs-server-provisioner
+
+NAME                                                DESIRED   CURRENT   READY   AGE   CONTAINERS               IMAGES                                                   SELECTOR
+replicaset.apps/nfs-server-provisioner-79d64c49bc   1         1         1       21d   nfs-client-provisioner   quay.io/external_storage/nfs-client-provisioner:latest   app=nfs-server-provisioner,pod-template-hash=79d64c49bc
+
+NAME                     READY   AGE   CONTAINERS   IMAGES
+statefulset.apps/mysql   3/3     45s   mysql        mysql:5.7
+root@controlplane:~/statefulset# kubectl run test-pod --rm -ti --image=dubareddy/utils -- bash
+If you don't see a command prompt, try pressing enter.
+root@test-pod:/# 
+root@test-pod:/# nslookup mysql-server
+Server:         10.96.0.10
+Address:        10.96.0.10#53
+
+Name:   mysql-server.default.svc.cluster.local
+Address: 192.168.101.127
+Name:   mysql-server.default.svc.cluster.local
+Address: 192.168.101.71
+Name:   mysql-server.default.svc.cluster.local
+Address: 192.168.101.67
+
+root@test-pod:/# exit
+exit
+Session ended, resume using 'kubectl attach test-pod -c test-pod -i -t' command when the pod is running
+pod "test-pod" deleted
+root@controlplane:~/statefulset# 
+```
+
 
 Inside mysql pod:
 
