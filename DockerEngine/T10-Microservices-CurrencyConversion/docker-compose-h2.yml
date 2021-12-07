@@ -1,0 +1,41 @@
+version: '3.7'
+services:
+  currency-conversion-ui:
+    image: shefkjm/currency-conversion-ui:1.0
+    ports:
+      - "9093:80"
+    restart: always
+    depends_on: # Start the depends_on first
+      - exchange-rate-service
+    networks:
+      - currency-conversion-network
+
+  exchange-rate-service:
+    image: shefkjm/exchange-rate-service:1.0
+    ports:
+      - "9092:9092"
+    restart: always
+
+    environment:
+      PORT: 9092
+      PROFILE: h2
+      LOG_ENABLED: 'true'
+      CRON_EXPRESSION: 0/5 * * ? * *
+    networks:
+      - currency-conversion-network
+  currency-conversion-service:
+    image: shefkjm/currency-conversion-service:1.0
+    ports:
+      - "9091:9091"
+    restart: always
+
+    environment:
+      PORT: 9091
+      PROFILE: h2
+      EXCHANGE_RATE_URL: http://exchange-rate-service:9092
+    networks:
+      - currency-conversion-network
+
+
+networks:
+  currency-conversion-network:
