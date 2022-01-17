@@ -12,7 +12,7 @@ CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS  
 70fc126266bf   nginx:latest   "/docker-entrypoint.…"   18 seconds ago   Up 13 seconds   80/tcp    nginx
 root@ubuntuserverdocker:~#
 
-Note: latest default tag will be added if you do not specify it
+Note: By default "latest" tag will be added if you do not specify it
 ```
 
 ## How to access application nginx created above to ensure its working?

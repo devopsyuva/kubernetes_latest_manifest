@@ -6,11 +6,14 @@ spec:
   replicas: 2 #It tells how PODs to be created to maintain HA
   selector:
     app: cicd
+    #release: v1.1
   template:
     metadata:
       name: jenkins-cicd
       labels:
         app: cicd
+        environment: production
+        release: v1.0
     spec:
       containers:
       - name: jenkins-server

@@ -104,5 +104,45 @@ registry                       2         1fd8e1b0bb7e   4 months ago   26.2MB
 root@ubuntuserverdocker:~#
 ```
 
+## Dashboard (UI) to manage local docker registries
+```
+root@ubuntudockerserver:~/compose/jenkins# docker container run -d -e ENV_DOCKER_REGISTRY_HOST=10.0.2.15 -e ENV_DOCKER_REGISTRY_PORT=5000 -p 8080:80 konradkleine/docker-registry-frontend:v2
+Unable to find image 'konradkleine/docker-registry-frontend:v2' locally
+v2: Pulling from konradkleine/docker-registry-frontend
+85b1f47fba49: Pull complete
+e3c64813de17: Pull complete
+6e61107884ac: Pull complete
+411f14e0e0fd: Pull complete
+987d1071cd71: Pull complete
+95913db6ef30: Pull complete
+1eb7ee3fbde2: Pull complete
+9b6f26b1b1a1: Pull complete
+daa6941a3108: Pull complete
+86cc842193a6: Pull complete
+024ab6890532: Pull complete
+af9b7d0cb338: Pull complete
+02f33fb0dcad: Pull complete
+e8275670ee05: Pull complete
+1c1a56903b01: Pull complete
+afc4e94602b9: Pull complete
+df1a95efa681: Pull complete
+d8bcb7be9e08: Pull complete
+d9c69b7bcc4f: Pull complete
+2a14b209069e: Pull complete
+e7c2bcdf63d5: Pull complete
+efc16e6bbbea: Pull complete
+552460069ca8: Pull complete
+e6b075740da3: Pull complete
+9976bc800046: Pull complete
+Digest: sha256:181aad54ee64312a57f8ccba5247c67358de18886d5e2f383b8c4b80a7a5edf6
+Status: Downloaded newer image for konradkleine/docker-registry-frontend:v2
+deec32b88789c65ec1dac4c311adda9c53003322fe9ec47c313adef7d29676df
+root@ubuntudockerserver:~/compose/jenkins# docker ps
+CONTAINER ID   IMAGE                                      COMMAND                  CREATED          STATUS          PORTS                                            NAMES
+deec32b88789   konradkleine/docker-registry-frontend:v2   "/bin/sh -c $START_S…"   49 seconds ago   Up 47 seconds   443/tcp, 0.0.0.0:8080->80/tcp, :::8080->80/tcp   recursing_leavitt
+86ce522c6aa6   registry:2                                 "/entrypoint.sh /etc…"   12 minutes ago   Up 12 minutes   0.0.0.0:5000->5000/tcp, :::5000->5000/tcp        registry
+root@ubuntudockerserver:~/compose/jenkins#
+```
+
 ### References
 - [Docker Registry](https://docs.docker.com/registry/)

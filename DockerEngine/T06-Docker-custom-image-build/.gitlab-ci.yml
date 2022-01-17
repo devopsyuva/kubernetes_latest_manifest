@@ -1,0 +1,38 @@
+#image: docker:19.0.3.12
+variables:
+  DOCKER_REGISTRY: 017187748261.dkr.ecr.us-east-1.amazonaws.com
+  AWS_DEFAULT_REGION: us-east-1
+  IMAGE_NAME: ubuntunginx
+  DOCKER_HOST: tcp://docker:2375
+
+services:
+  - docker:19.03.12-dind
+  # - docker:dind
+
+before_script:
+  - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin $DOCKER_REGISTRY
+
+stages:
+  - build
+
+image_build:
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]
+  stage: build
+  before_script:
+    - awazon-linux-extras install docker
+    - aws --version
+    - docker --version
+  script:
+    - aws ecr get-login-password | docker login --username $DOCKER_USERNAME --password-stdin $DOCKER_REGISTRY
+    - docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest -f images/Dockerfile .
+    - docker push $DOCKER_REGISTRY/$$IMAGE_NAME:latest
+  after_script:
+    - docker logout
+    # - aws ecr delete-repository --repository-name hello-repository --region region --force
+  rules:
+    - if: $CI_BRANCH_NAME == "main"
+      changes:
+        - images/Dockerfile
+      when: always #manual

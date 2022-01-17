@@ -27,6 +27,71 @@ services:
 volumes:
   jenkins_data: {}
 
+
+root@ubuntudockerserver:~/compose/registry# cat docker-compose.yaml
+version: "3"
+
+services:
+  docker-repository:
+    image: registry:2
+    container_name: docker-repository
+    ports:
+      - 5000:5000
+    restart: always
+    volumes:
+      - registry-data:/var/lib/registry
+  registry-ui:
+    image: konradkleine/docker-registry-frontend:v2
+    container_name: registry-ui
+    ports:
+      - 8090:80
+    environment:
+      ENV_DOCKER_REGISTRY_HOST: docker-repository
+      ENV_DOCKER_REGISTRY_PORT: 5000
+
+volumes:
+  registry-data: {}
+root@ubuntudockerserver:~/compose/registry#
+
+
+```
+root@ubuntudockerserver:~/compose/nginx# cat docker-compose.yml
+version: "3"
+
+services:
+  nginxwebapp:
+    build: .
+    container_name: nginxwebapp
+    volumes:
+      - www-data:/usr/share/nginx/html
+      - nginx-data:/var/www/html
+    restart: always
+    networks:
+      nginx_nertwork:
+        ipv4_address: 10.10.10.2
+
+volumes:
+  www-data: {}
+  nginx-data: {}
+
+networks:
+  nginx_nertwork:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.0.0/16
+root@ubuntudockerserver:~/compose/nginx# cat Dockerfile
+FROM ubuntu:20.04
+MAINTAINER "sudheer reddy duba<sudheer.reddy.duba@gmail.com>"
+RUN apt update && apt install -y nginx
+COPY index.html /var/www/html
+COPY index.html /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+root@ubuntudockerserver:~/compose/nginx# cat index.html
+<h1>Welcome to Docker Compose Build for Nginx on Ubuntu 20.04 v1</h1>
+root@ubuntudockerserver:~/compose/nginx#
+```
 ```
 root@ubuntuserverdocker:~/compose-files# cat docker-compose.yaml
 version: "3"
