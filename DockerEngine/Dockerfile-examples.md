@@ -1,3 +1,6 @@
+# Dockerfile parameters
+**A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. Using docker build users can create an automated build that executes several command-line instructions in succession.**
+```
 FROM --> Specify parent image that to be used to build custom image
 MAINTAINER --> Optional, to specify Name and email of the auther
 RUN --> Execute command, how we have used in shell of linux
@@ -35,15 +38,10 @@ The options that can appear before CMD are:
 --retries=N (default: 3)
 
 SHELL --> specify option to pass which shell need to be used to execute some commands
-
-
-
-Reference: https://docs.docker.com/engine/reference/builder/#volume
-
-
-Examples:
-=========
-
+```
+- [Reference](https://docs.docker.com/engine/reference/builder/#volume)
+- Different scenarios to use Dockerfile for custom images:
+```
 FROM ubuntu:20.04
 MAINTAINER SUDHEER REDDY DUBA "https://github.com/dubareddy"
 RUN apt-get update
@@ -57,7 +55,8 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
----
+```
+```
 FROM ubuntu:20.04
 MAINTAINER sudhams reddy duba<dubareddy.383@gmail.com>
 ENV DEBAIN_FRONTEND=noninteractive
@@ -71,7 +70,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 HEALTHCHECK CMD curl --fail http://localhost:80/ || exit 1
----
+```
+```
 FROM nginx:1.19.0 AS builder
 MAINTAINER sudhams reddy duba<dubareddy.383@gmail.com>
 COPY index.html /var/www/html/
@@ -79,7 +79,8 @@ COPY index.html /var/www/html/
 FROM ubuntu:18.04
 COPY --from=builder /var/www/html/index.html /usr/share/nginx/html/
 CMD ["cat", "/usr/share/nginx/html/index.html"]
----
+```
+```
 FROM jenkins/jenkins:lts
 MAINTAINER sudhams reddy duba "dubareddy.383@gmail.com"
 ENV JENKINS_USER admin
@@ -89,19 +90,16 @@ ENV JAVA_OPTS -Djenkins.install.runSetupWizard=false
 COPY  plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
 USER jenkins
-
-update/create plugins.txt with list to plugins that you want to install
-
-++
+```
+- update/create plugins.txt with list to plugins that you want to install
+```
 docker
 kubernetes
-++
-
-Optional:
-
+```
+- Optional:
+```
 ENV JENKINS_OPTS --httpPort=-1 --httpsPort=8083 --httpsCertificate=/var/lib/jenkins/cert --httpsPrivateKey=/var/lib/jenkins/pk
 ENV JENKINS_SLAVE_AGENT_PORT 50001
-
 
 File "executers.groovy"
 
@@ -112,10 +110,9 @@ Jenkins.instance.setNumExecutors(5)
 
 FROM jenkins/jenkins:lts
 COPY executors.groovy /usr/share/jenkins/ref/init.groovy.d/executors.groovy
-
-
-How to get list of plugins from existing server:
-
+```
+- How to get list of plugins from existing server:
+```
 JENKINS_HOST=username:password@myhost.com:port
 curl -sSL "http://$JENKINS_HOST/pluginManager/api/xml?depth=1&xpath=/*/*/shortName|/*/*/version&wrapper=plugins" | perl -pe 's/.*?<shortName>([\w-]+).*?<version>([^<]+)()(<\/\w+>)+/\1 \2\n/g'|sed 's/ /:/'
 
@@ -203,4 +200,4 @@ matrix-auth:2.6.7
 pam-auth:1.6
 ldap:2.7
 email-ext:2.83
-++
+```

@@ -90,7 +90,7 @@ spec:
       serviceAccountName: nfs-server-provisioner
       containers:
         - name: nfs-client-provisioner
-          image: quay.io/external_storage/nfs-client-provisioner:latest
+          image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2 #quay.io/external_storage/nfs-client-provisioner:latest
           volumeMounts:
             - name: nfs-server
               mountPath: /persistentvolumes
@@ -98,14 +98,14 @@ spec:
             - name: PROVISIONER_NAME
               value: k8ssudheerdemo.com/nfs
             - name: NFS_SERVER
-              value: 10.128.0.63
+              value: 10.182.0.6
             - name: NFS_PATH
-              value: /var/nfs
+              value: /var/tmp/nfs-data
       volumes:
         - name: nfs-server
           nfs:
-            server: 10.128.0.63
-            path: /var/nfs
+            server: 10.182.0.6
+            path: /var/nfs/nfs-data
 ---
 apiVersion: v1
 kind: Service

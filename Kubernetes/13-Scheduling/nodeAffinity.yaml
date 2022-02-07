@@ -15,8 +15,8 @@ spec:
           - key: disk-type
             operator: In  #This value can be In, NotIn, Exists, or DoesNotExist, Lt, or Gt.
             values:
-            - ssd-server
-            - hdd-server
+            - ssd
+            - hdd
   containers:
   - name: nginx
     image: nginx
