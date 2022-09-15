@@ -1,0 +1,47 @@
+#Pre-request: Installing AWS Load Balancer Controller add-on
+#https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html
+#IP targets
+#Note: By default, the previous example service manifest LoadBalancer service
+#creates a Classic Load Balancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-web
+  service.beta.kubernetes.io/aws-load-balancer-type: "external"
+  service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+  #service.beta.kubernetes.io/aws-load-balancer-ip-address-type: dualstack --> for IPv6 Cluster
+  service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+#Important:
+#Do not edit the annotations after creating your service. If you need to modify it, delete
+#the service object and create it again with the desired value for this annotation.
+
+#Points to be noted for LoadBalancer type service issues
+# 1) We have to check and ensure there are correct tags defined for VPC used by EKS
+# 2) We have required AWS IAM permissions for EKS cluster role
+# 3) Valid Kubernetes service definition
+# 4) There are enough free IP addresses on our EKS VPC subnets used
+
+#Instance targets
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-web
+  service.beta.kubernetes.io/aws-load-balancer-type: "external"
+  service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "instance"
+  #service.beta.kubernetes.io/aws-load-balancer-ip-address-type: dualstack --> for IPv6 Cluster
+  service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer

@@ -11,7 +11,7 @@ spec:
   - name: container-writing-dates # Name of first container
     image: alpine # Image to use for first container
     command: ["/bin/sh"]
-    args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"] # writing date command output to index.html filr for every 10sec
+    args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"] # writing date command output to index.html file for every 10sec
     volumeMounts:
     - name: shared-date-logs
       mountPath: /var/log # Mounting log dir so app can write to it.

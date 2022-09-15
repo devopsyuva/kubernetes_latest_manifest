@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-hostpath-01
+spec:
+  storageClassName: slow
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi #Min 4Gi
+
+#  Warning  ProvisioningFailed  14s  persistentvolume-controller  Failed to provision volume with StorageClass "slow": InvalidParameterValue: The volume size is invalid for io1 volumes: 2 GiB. io1 volumes must be at least 4 GiB in size. Please specify a volume size above the minimum limit.
+#           status code: 400, request id: 8e274ff2-616b-47ee-afae-0c3388b49f2f

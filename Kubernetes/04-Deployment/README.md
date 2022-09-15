@@ -17,7 +17,7 @@
 if we want to change the image for a deployment like from 1.7.9 to 1.9.1 which is upgrade of your applications
 
 Set a deployment's nginx container image to 'nginx:1.9.1', and its busybox container image to 'busybox'.
-#kubectl image deployment/nginx busybox=busybox nginx=nginx:1.9.1
+#kubectl set image deployment/nginx busybox=busybox nginx=nginx:1.9.l
 
 ## Print result (in yaml format) of updating nginx container image from local file, without hitting the server
 kubectl set image -f path/to/file.yaml nginx=nginx:1.9.1 --local -o yaml

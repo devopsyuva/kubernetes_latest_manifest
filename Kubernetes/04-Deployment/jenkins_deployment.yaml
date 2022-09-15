@@ -20,7 +20,7 @@ spec:
         ports:
         - name: ui-port
           containerPort: 8080
-          hostPath: 8092
+          hostPort: 8092
         - name: agent-port
           containerPort: 50000
         volumeMounts:

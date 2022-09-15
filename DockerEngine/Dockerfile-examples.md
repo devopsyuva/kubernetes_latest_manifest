@@ -16,12 +16,7 @@ VOLUME --> Example: /usr/share/nginx/html
 USER --> USER to change to a non-root user
 ONBUILD
 ARG --> The ARG instruction defines a variable that users can pass at build-time to the builder with the docker build command using the --build-arg <varname>=<value> flag
-
-ARG VERSION=1.0
-RUN mkdir /test/file-${VERSRION}
-COPY . /test/file-${VERSION}
-
-STOPSIGNAL
+STOPSIGNAL --> if we want stop some process garceful or forceful ("STOPSIGNAL SIGQUIT")
 HEALTHCHECK --> Syntax looks like below:
 
 HEALTHCHECK [OPTIONS] CMD command
@@ -36,11 +31,12 @@ The options that can appear before CMD are:
 --timeout=DURATION (default: 30s)
 --start-period=DURATION (default: 0s)
 --retries=N (default: 3)
-
+```
 SHELL --> specify option to pass which shell need to be used to execute some commands
 ```
 - [Reference](https://docs.docker.com/engine/reference/builder/#volume)
 - Different scenarios to use Dockerfile for custom images:
+
 ```
 FROM ubuntu:20.04
 MAINTAINER SUDHEER REDDY DUBA "https://github.com/dubareddy"

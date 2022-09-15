@@ -1,4 +1,4 @@
-kubectl create secret docker-registry my-secret --docker-server='https://index.docker.io/v1/' --docker-username=dubareddy --docker-password= --docker-email=dubareddy.383@gmail
+kubectl create secret docker-registry my-secret --docker-server='https://index.docker.io/v1/' --docker-username=dubareddy --docker-password= --docker-email=dubareddy.383@gmail.com
 
 apiVersion: v1
 kind: Pod

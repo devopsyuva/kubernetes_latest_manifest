@@ -19,8 +19,8 @@ spec:
         memory: 1Gi
         cpu: "200m"
       requests:
-        memory: 1Gi
-        cpu: "200m"
+        memory: 0.5Gi
+        cpu: "100m"
   volumes:
     - name: jenkins-data
       nfs:

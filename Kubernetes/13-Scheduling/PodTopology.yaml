@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-pod
+spec:
+  # Configure a topology spread constraint
+  topologySpreadConstraints:
+    - maxSkew: 1 #<integer>
+      minDomains: <integer> # optional; alpha since v1.24
+      topologyKey: kubernetes.io/hostname #<string>
+      whenUnsatisfiable: ScheduleAnyway #<string>
+      labelSelector: #<object>
+        matchLabels:
+          app: nginx
+  ### other Pod fields go here
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx-storage
+      mountPath: /usr/share/nginx/html
+      subPath: html
+    ports:
+      - containerPort: 80
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: "100Mi"
+      limits:
+        cpu: "0.2"
+        memory: "200Mi"
+  volumes:
+  - name: nginx-storage
+    emptyDir: {}
+#Document: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: webapp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-demo
+  namespace: webapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: nginx
+      containers:
+      - name: nginx
+        image: nginx #k8s.gcr.io/pause:3.1
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: "100Mi"
+          limits:
+            cpu: "0.2"
+            memory: "200Mi"
