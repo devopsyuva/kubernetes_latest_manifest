@@ -57,9 +57,16 @@ apt-get update && apt-get install -y containerd.io
 # Configure containerd
 mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
 
 # Restart containerd
 systemctl restart containerd
+
+# To execute crictl CLI commands, ensure we create a configuration file as mentioned below
+cat /etc/crictl.yaml
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 2
 ```
 
 - Install kubernetes packages on all nodes.
@@ -83,6 +90,9 @@ sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
+### Reference:
+- [kubeadm install](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
+
 
 ## On control nodes (k8s master node):
 - We are bootstrapping control plane node.
@@ -101,10 +111,14 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 wget https://docs.projectcalico.org/manifests/custom-resources.yaml
 
+or
+
+Please refer the official document before proceeding further
+https://projectcalico.docs.tigera.io/getting-started/kubernetes/quickstart
+
 Note:
 - Since I am using subnet for POD as 10.244.0.0/16 instead of default 192.168.0.0/16 which will conflict with my nodes ip address. First I downloaded custom-resources.yaml file and updates below parameter.
 - cidr: 10.244.0.0/16
-- please read calico project details for more info --> https://docs.projectcalico.org/getting-started/kubernetes/quickstart
 
 
 # After update, apply the YAML file
