@@ -108,6 +108,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 - calico network for kubernetes CNI
+- [Calico Document](https://projectcalico.docs.tigera.io/getting-started/kubernetes/quickstart)
 ```
 kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 wget https://docs.projectcalico.org/manifests/custom-resources.yaml
