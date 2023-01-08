@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx
+    environment: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      environment: production
+  template:
+    metadata:
+      name: nginx-demo
+      labels:
+        app: nginx
+        environment: production
+    spec:
+      containers:
+      - name: write-container
+        image: alpine
+        command: ["/bin/sh"]
+        args: ["-c", "while true;do echo `date`: $POD_IP | tee -a /var/log/index.html >> /proc/1/fd/1; sleep 10;done"]
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+        volumeMounts:
+          - name: shared-data
+            mountPath: /var/log
+      volumes:
+        - name: shared-data
+          emptyDir: {}
