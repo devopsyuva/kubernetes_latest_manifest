@@ -1,17 +1,17 @@
-/var/backup 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
+/var/nfs 192.168.0.0/24(rw,sync,no_subtree_check,no_root_squash)
 
-root@containerdmanager:~# ls -l /var/backup
+root@containerdmanager:~# ls -l /var/nfs
 total 12
-drwxr-xr-x 5 999 root 4096 Aug 16 14:25 data0
-drwxr-xr-x 5 999 root 4096 Aug 16 14:24 data1
-drwxr-xr-x 5 999 root 4096 Aug 16 14:24 data2
+drwxr-xr-x 5 nobody nogroup 4096 Aug 16 14:25 data0
+drwxr-xr-x 5 nobody nogroup 4096 Aug 16 14:24 data1
+drwxr-xr-x 5 nobody nogroup 4096 Aug 16 14:24 data2
 root@containerdmanager:~#
 
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pv-volume-data0
+  name: pv-data0
   labels:
     type: local
 spec:
@@ -21,13 +21,13 @@ spec:
   accessModes:
     - ReadWriteOnce
   nfs:
-    server: 192.168.1.120
-    path: "/var/backup/data0"
+    server: 192.168.0.200
+    path: "/var/nfs/data0"
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pv-volume-data1
+  name: pv-data1
   labels:
     type: local
 spec:
@@ -37,13 +37,13 @@ spec:
   accessModes:
     - ReadWriteOnce
   nfs:
-    server: 192.168.1.120
-    path: "/var/backup/data1"
+    server: 192.168.0.200
+    path: "/var/nfs/data1"
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pv-volume-data2
+  name: pv-data2
   labels:
     type: local
 spec:
@@ -53,8 +53,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   nfs:
-    server: 192.168.1.120
-    path: "/var/backup/data2"
+    server: 192.168.0.200
+    path: "/var/nfs/data2"
 ---
 apiVersion: v1
 kind: Service
@@ -99,23 +99,28 @@ spec:
           mountPath: /var/lib/mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "test1234"
-        - name: MYSQL_ROOT_HOST
-          value: '%,mysql-server'
-        - name: MY_POD_IP
           valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
+            secretKeyRef:
+              name: mysqldb-secret
+              key: mysql_root_passwd
+        - name: MYSQL_ROOT_HOST
+          value: '%'
         livenessProbe:
           exec:
-            command: ["mysqladmin", "ping"]
+            command:
+              - bash
+              - "-c"
+              - mysqladmin -uroot -p$MYSQL_ROOT_PASSWORD ping
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
         readinessProbe:
           exec:
             # Check we can execute queries over TCP (skip-networking is off).
-            command: ["mysql", "-h", "$(MY_POD_IP)", "-e", "SELECT 1"]
+            command:
+              - bash
+              - "-c"
+              - mysql -hlocalhost -uroot -p$MYSQL_ROOT_PASSWORD -e "SELECT 1"
           initialDelaySeconds: 5
           periodSeconds: 2
           timeoutSeconds: 1
