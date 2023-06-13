@@ -22,7 +22,7 @@
     - Temporary disable #swapoff -a. Permanent disable open #/etc/fstab file and comment swap line
 - Min 15GiB Storage, 2 vCPU and 4 GiB RAM
 
-## Common operations on all (except HAproxy node)
+## Common operations on all nodes (except HAproxy node)
 - Launch AWS EC2 Instance as private or public as per our need, I this demo we are using public IP address to login to instances and private IP address for cluster and loadbalancer communication
 - login to controlplane and computeplane instances 
 - update apt index and upgrade all the package on the system to latest version as per ubuntu repo using sudo or root user
