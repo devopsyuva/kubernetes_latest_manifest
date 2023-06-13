@@ -1,4 +1,4 @@
-# Kubernetes setup and configuration using **kubeadm** tool
+# Kubernetes HA setup and configuration using **kubeadm** tool
 
 ### k8s Tools used
 - kubeadm
