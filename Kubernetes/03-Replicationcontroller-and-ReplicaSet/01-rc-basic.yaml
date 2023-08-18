@@ -21,3 +21,38 @@ spec:
           limits:
             cpu: "0.1"
             memory: "150Mi"
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nginx-rc
+  labels:
+    environment: production
+spec:
+  #replicas: 3
+  selector:
+    app: nginx
+  template:
+    metadata:
+      name: temp-nginx
+      labels:
+        app: nginx
+    spec:
+      volumes:
+      - name: shared-date-logs  # Creating a shared volume for my containers "container-writing-dates" and "container-serving-dates"
+        emptyDir: {}            # On node where POD was assigned, this directory will be used for shared volume /var/lib/kubelet/<pod-uid>/volumes
+      containers:
+      - name: container-writing-dates # Name of first container
+        image: alpine # Image to use for first container
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"] # writing date command output to index.html file for every 10sec
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /var/log # Mounting log dir so app can write to it.
+      - name: container-serving-dates # Name of second container
+        image: nginx:1.19.0 # Image for second container
+        ports:
+        - containerPort: 80 # Defining what port to use.
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /usr/share/nginx/html # Where nginx will serve the written file
