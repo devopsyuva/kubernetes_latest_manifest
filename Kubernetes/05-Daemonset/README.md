@@ -30,3 +30,8 @@ Examples:
 From 1.6 we can do rolling updates.
 #kubectl set image ds/frontend webserver=httpd
 ```
+## Execute below commamd to change the strategy for Daemonset Object using kubectl patch
+```
+$ kubectl patch ds nginx-deployment -p '{"spec": {"updateStrategy": {"type": "OnDelete"}}}'
+daemonset.apps/nginx-deployment patched
+```
