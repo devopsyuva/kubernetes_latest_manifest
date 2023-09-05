@@ -16,10 +16,11 @@
 - 3 nodes for Controlplane
 - 1 or more nodes for Computeplane (as per our need)
 
-### OS and Pre-requisite
+### OS and Pre-requisites
 - Ubuntu 22.04 LTS (AMI for EC2)
 - Disable swap memory, if enabled. Check with command #free -h
-    - Temporary disable #swapoff -a. Permanent disable open #/etc/fstab file and comment swap line
+    - Temporary disable #swapoff -a
+    - To disable permanently open #/etc/fstab file and comment swap line
 - Min 15GiB Storage, 2 vCPU and 4 GiB RAM
 
 ## Common operations on all nodes (except HAproxy node)
