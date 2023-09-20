@@ -63,10 +63,11 @@ sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.t
 systemctl restart containerd
 
 # To execute crictl CLI commands, ensure we create a configuration file as mentioned below
-cat /etc/crictl.yaml
+cat > /etc/crictl.yaml <<EOF
 runtime-endpoint: unix:///run/containerd/containerd.sock
 image-endpoint: unix:///run/containerd/containerd.sock
 timeout: 2
+EOF
 ```
 
 - Install kubernetes packages on all nodes.
