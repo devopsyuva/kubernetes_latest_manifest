@@ -2,7 +2,7 @@
 **A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. Using docker build users can create an automated build that executes several command-line instructions in succession.**
 ```
 FROM --> Specify parent image that to be used to build custom image
-MAINTAINER --> Optional, to specify Name and email of the auther
+MAINTAINER --> Optional, to specify Name and email of the auther (deprecated)
 RUN --> Execute command, how we have used in shell of linux
 COPY --> copy files from docker host path to image layer
 WORKDIR --> shift to specific path, as we do with cd command in linux
