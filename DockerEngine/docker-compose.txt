@@ -364,3 +364,44 @@ networks:
 ++
 
 Sample applications: https://docs.docker.com/engine/examples/postgresql_service/
+
+```
+version: "3.9"
+services:
+  postgres:
+    build:
+      context: ./postgres
+    container_name: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: k8sengineers
+      POSTGRES_PASSWORD: test12345
+  k8sbackend:
+    build:
+      context: ./k8sengineers-backend
+    container_name: k8sbackend
+    volumes:
+      - k8sbackend-data:/app
+    ports:
+      - "8000:8000"
+    restart: always
+  k8sfrontend:
+    build:
+      context: ./k8sengineers-frontend
+    container_name: k8sfrontend
+    volumes:
+      - k8sfrontend-data:/app
+    ports:
+      - "80:80"
+    restart: always
+
+volumes:
+  postgres-data: {}
+  k8sbackend-data: {}
+  k8sfrontend-data: {}
+```
