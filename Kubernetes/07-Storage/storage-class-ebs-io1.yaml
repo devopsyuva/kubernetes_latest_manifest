@@ -7,3 +7,23 @@ parameters:
   type: io1
   iopsPerGB: "10"
   fsType: ext4
+---
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.ebs.csi.aws.com/zone
+    values:
+    - us-east-1b
+    - us-east-1c
+    - us-east-1a
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  encrypted: "true"
+  iopsPerGB: "150"
+  type: io1
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
