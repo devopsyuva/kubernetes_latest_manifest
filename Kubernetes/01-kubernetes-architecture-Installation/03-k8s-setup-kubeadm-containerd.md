@@ -2,10 +2,10 @@
 
 ## System Specification:
 - OS: Ubuntu 22.04 LTS server
-- RAM: 4GB or more
-- Disk: 30GB+
+- RAM: 2GB or more
+- Disk: 20GB+
 - CPU: 2 core or more
-- Swap Memory: Diable
+- Swap Memory: Disable
 - Single/Two nodes: VirtualBox was used to launch both nodes(Master Hostname: controlplane and Worker Hostname: computeplaneone)
 - Network: Bridge was used to have internal and external access (if not we can use 2 interface, one for NAT and one as host-only adaptor)
 
