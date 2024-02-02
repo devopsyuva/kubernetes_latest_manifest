@@ -60,7 +60,9 @@ RUN apt-get update && \
     apt-get install -y iproute2 nginx curl
 COPY index.html /usr/share/nginx/html/
 VOLUME /usr/share/nginx/html
+```
 # forward request and error logs to docker log collector
+```
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 EXPOSE 80
@@ -81,7 +83,9 @@ FROM jenkins/jenkins:lts
 MAINTAINER sudhams reddy duba "dubareddy.383@gmail.com"
 ENV JENKINS_USER admin
 ENV JENKINS_PASS admin
+```
 # Skip initial setup
+```
 ENV JAVA_OPTS -Djenkins.install.runSetupWizard=false
 COPY  plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
