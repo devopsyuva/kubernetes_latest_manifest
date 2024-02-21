@@ -5,7 +5,7 @@
 - Services can handle PODs with Selector(automatically --> default) and without selector(Manual creation of Endpoint with help of ExternalName etc.,)
 
 ## Different values supported for type in service spec:
-- ClusterIP(default), NodePort, LoadBalancer, EnternalName, ExternalIP, Healess (ClusterIP: None)
+- ClusterIP(default), NodePort, LoadBalancer, EnternalName, ExternalIP, Headless (ClusterIP: None)
 
 ![Services](../src/images/services-k8s.png)
 
