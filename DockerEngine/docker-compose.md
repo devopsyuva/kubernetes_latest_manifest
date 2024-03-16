@@ -423,3 +423,7 @@ volumes:
   k8sbackend-data: {}
   k8sfrontend-data: {}
 ```
+
+### References:
+- How docker compose works?
+  - https://docs.docker.com/compose/compose-application-model/
