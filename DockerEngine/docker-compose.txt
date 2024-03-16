@@ -1,5 +1,5 @@
-Installation:
-=============
+# Docker Compose Standalone Installation:
+```
 sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
 Note: For alpine, the following dependency packages are needed: py-pip, python-dev, libffi-dev, openssl-dev, gcc, libc-dev, and make.
@@ -9,9 +9,13 @@ sudo chmod +x /usr/local/bin/docker-compose
 Optional setting: sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 #docker-compose --version
+```
+
+### Note:
+- For latest version of Docker Engine, we not need to install standlone package for which we can use docker-compose-plugin
 
 
-
+```
 version: "3"
 
 services:
@@ -26,9 +30,9 @@ services:
 
 volumes:
   jenkins_data: {}
+```
 
-
-root@ubuntudockerserver:~/compose/registry# cat docker-compose.yaml
+```
 version: "3"
 
 services:
@@ -52,10 +56,9 @@ services:
 volumes:
   registry-data: {}
 root@ubuntudockerserver:~/compose/registry#
-
+```
 
 ```
-root@ubuntudockerserver:~/compose/nginx# cat docker-compose.yml
 version: "3"
 
 services:
@@ -80,6 +83,8 @@ networks:
       driver: default
       config:
         - subnet: 10.10.0.0/16
+```
+```
 root@ubuntudockerserver:~/compose/nginx# cat Dockerfile
 FROM ubuntu:20.04
 MAINTAINER "sudheer reddy duba<sudheer.reddy.duba@gmail.com>"
@@ -92,6 +97,7 @@ root@ubuntudockerserver:~/compose/nginx# cat index.html
 <h1>Welcome to Docker Compose Build for Nginx on Ubuntu 20.04 v1</h1>
 root@ubuntudockerserver:~/compose/nginx#
 ```
+
 ```
 root@ubuntuserverdocker:~/compose-files# cat docker-compose.yaml
 version: "3"
@@ -118,7 +124,9 @@ services:
 volumes:
   jenkins_data: {}
   nginx-backup: {}
----
+```
+
+```
 root@ubuntuserverdocker:~/compose-files# docker-compose up -d
 Creating network "compose-files_default" with the default driver
 Creating volume "compose-files_jenkins_data" with default driver
@@ -158,7 +166,7 @@ Creating nginx   ... done
 root@ubuntuserverdocker:~/compose-files#
 ```
 
-How to call all resources created by docker-compose?
+- How to call all resources created by docker-compose?
 ```
 root@ubuntuserverdocker:~/compose-files/2-tier-app# cat docker-compose.yml
 version: '3.3'
@@ -202,7 +210,9 @@ services:
        WORDPRESS_DB_NAME: wordpress
 volumes:
     mysql_data: {}
----
+```
+
+```
 root@ubuntuserverdocker:~/compose-files/2-tier-app# docker-compose down --rmi all -v
 Stopping 2-tier-app_wordpress_1 ... done
 Stopping nginxserver            ... done
@@ -218,10 +228,10 @@ Removing image wordpress:latest
 root@ubuntuserverdocker:~/compose-files/2-tier-app#
 ```
 
+```
 version: '3'
 
 services:
-
   registry:
     container_name: docker-registry
     restart: always
@@ -233,7 +243,9 @@ services:
 
 volumes:
   docker-registry-data: {}
----
+```
+
+```
 version: "3"
 
 services:
@@ -248,7 +260,9 @@ services:
 
 volumes:
   portainer_data: {}
----
+```
+
+```
 version: '3.3'
 
 services:
@@ -277,7 +291,9 @@ services:
        WORDPRESS_DB_NAME: wordpress
 volumes:
     db_data: {}
----
+```
+
+```
 version: "2"
 services:
   node1:
@@ -309,15 +325,16 @@ services:
 networks:
   pxc-network:
     driver: bridge
-
+```
+```
 FROM python:3.6
 MAINTAINER sudhams reddy duba<dubareddy.383@gmail.com>
 RUN pip install pymemcache
 COPY manage.py /root/
 WORKDIR /root
 CMD ["python3", "/root/manage.py"]
-
-
+```
+```
 from pymemcache.client import base
 # Don't forget to run `memcached' before running this next line:
 client = base.Client(('cacheserver', 11211))
@@ -325,8 +342,9 @@ client = base.Client(('cacheserver', 11211))
 client.set('visualpath', 'Docker and Kubernetes Demo')
 # Retrieve previously set data again:
 client.get('visualpath')
+```
 
-
+```
 version: '3'
 services:
   pythonserver:
@@ -347,7 +365,7 @@ networks:
   custom_net:
       driver: bridge
 
-++
+
     test_3:
         container_name: test_3
         image: some:image
@@ -361,10 +379,10 @@ networks:
             driver: default
             config:
                 - subnet: 172.28.0.0/16
-++
+```
 
-Sample applications: https://docs.docker.com/engine/examples/postgresql_service/
-
+## Sample applications
+- https://docs.docker.com/engine/examples/postgresql_service/
 ```
 version: "3.9"
 services:
