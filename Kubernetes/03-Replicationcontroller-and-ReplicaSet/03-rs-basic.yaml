@@ -1,3 +1,44 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+  labels:
+    environment: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: production
+    #matchExpressions:                           #matchLabels
+      #- {key: app, operator: NotIn, values: ["dev", "development"]}
+      #- {key: app, operator: In, values: ["dev", "development"]}
+      #- {key: app, operator: Exists}
+      #- {key: app, operator: DoesNotExist}
+  template:
+    metadata:
+      name: temp-nginx
+      labels:
+        app: production
+    spec:
+      volumes:
+      - name: shared-date-logs  # Creating a shared volume for my containers "container-writing-dates" and "container-serving-dates"
+        emptyDir: {}            # On node where POD was assigned, this directory will be used for shared volume /var/lib/kubelet/<pod-uid>/volumes
+      containers:
+      - name: container-writing-dates # Name of first container
+        image: alpine # Image to use for first container
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"] # writing date command output to index.html file for every 10sec
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /var/log # Mounting log dir so app can write to it.
+      - name: container-serving-dates # Name of second container
+        image: nginx:1.19.0 # Image for second container
+        ports:
+        - containerPort: 80 # Defining what port to use.
+        volumeMounts:
+        - name: shared-date-logs
+          mountPath: /usr/share/nginx/html # Where nginx will serve the written file
+---
 apiVersion: apps/v1 #extensions/v1beta1 for before v1.16
 kind: ReplicaSet
 metadata:
