@@ -6,6 +6,26 @@ metadata:
   name: hello
 spec:
   successfulJobsHistoryLimit: 5
+  schedule: "*/2 * * * *"   #Minutes(0-59) Hours(0-23) DOM(1-31) Month(1-12) DOW(0-6)
+  jobTemplate:   #Job template
+    spec:
+      template:  #POD template
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1 #batch/v1beta1 --> v1.21
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  successfulJobsHistoryLimit: 5
   schedule: "*/2 * * * *"
   jobTemplate:
     spec:
