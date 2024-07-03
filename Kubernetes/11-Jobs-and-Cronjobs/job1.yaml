@@ -1,16 +1,16 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: my-job
+  name: demojob
 spec:
   template:
     spec:
       containers:
-      - name: pi
-        image: perl
-        command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
-      restartPolicy: Never
-  backoffLimit: 2
+      - name: busybox
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "echo 'Welcome to Kubernetes Batch Operations demo'"]
+      restartPolicy: Never #OnFailure
 ---
 apiVersion: batch/v1
 kind: Job
