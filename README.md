@@ -8,4 +8,5 @@
 
 My YouTube Channel for more videos on each topic with examples:
 
-- [Sudheer Youtube Channel](https://www.youtube.com/channel/UCh2V8IkTjmu1yyAfYeU1zHw)
+- [way2techstack Channel](https://www.youtube.com/@way2techstack)
+- [Sudheer Youtube Channel - will be closed soon](https://www.youtube.com/channel/UCh2V8IkTjmu1yyAfYeU1zHw)
