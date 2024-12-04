@@ -5,7 +5,7 @@ kind: CronJob
 metadata:
   name: hello
 spec:
-  successfulJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 5 #Default: 3
   schedule: "*/2 * * * *"   #Minutes(0-59) Hours(0-23) DOM(1-31) Month(1-12) DOW(0-6)
   jobTemplate:   #Job template
     spec:
