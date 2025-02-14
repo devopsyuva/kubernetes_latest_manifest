@@ -1,8 +1,8 @@
 # kubernetes setup with containerd as CRI
 
 ## System Specification:
-- OS: Ubuntu 22.04 LTS server
-- RAM: 2GB or more
+- OS: Ubuntu 24.04 LTS server
+- RAM: 3GB or more
 - Disk: 20GB+
 - CPU: 2 core or more
 - Swap Memory: Disable
